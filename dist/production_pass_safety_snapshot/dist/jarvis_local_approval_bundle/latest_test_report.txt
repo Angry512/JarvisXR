@@ -1,0 +1,43 @@
+JARVIS local interaction report
+timestamp: 2026-07-06T19:41:34
+passed: 37
+failed: 0
+
+Passed checks:
+- help icon model exists
+- help icon exists in iOS source
+- mesh control is understandable in iOS source
+- planner source exists
+- control mesh planner source exists
+- initial surface has no guide text
+- initial surface has no product data dump
+- no Recent Activity in product Swift
+- no response panel label in product Swift
+- no debug chips in product Swift
+- help opens
+- help explains in-app voice limit
+- help includes vision commands
+- iOS help includes scan read detect
+- iOS help avoids data/report wording
+- orb tap enters ready
+- ready tap starts listening
+- partial transcript captured
+- silence endpoint routes inspection
+- state after voice scan is inspection
+- speaking state can be entered
+- speaking tap stops speaking
+- keyboard visible
+- input remains above keyboard
+- help bounds remain visible in keyboard mode
+- compact mode preserves orb
+- keyboard hidden
+- closed layout leaves home indicator
+- read this maps to OCR
+- detect objects routes inspection
+- detect objects reports model missing
+- go home routes to Control Mesh
+- tap routes to Voice Control grid
+- router has Control Mesh route for screenshot
+- priority command remains available: scan this
+- priority command remains available: read this
+- priority command remains available: detect objects

@@ -1,0 +1,23 @@
+# XR Physical Setup Checklist
+
+- [ ] Decide whether to back up first.
+- [ ] Decide whether to erase/reset.
+- [ ] Decide passcode policy.
+- [ ] Decide Apple ID policy.
+- [ ] Confirm Wi-Fi setup.
+- [ ] Remove SIM if present.
+- [ ] Delete unnecessary apps.
+- [ ] Turn unnecessary notifications off.
+- [ ] Configure Focus.
+- [ ] Configure Screen Time.
+- [ ] Clean Home Screen.
+- [ ] Set Jarvis-aligned wallpaper.
+- [ ] Enable Guided Access.
+- [ ] Set Guided Access exit passcode or Face ID.
+- [ ] Test Guided Access exit.
+- [ ] If Mac exists, check Apple Configurator availability.
+- [ ] If supervision is available, document Single App Mode plan.
+- [ ] Test restart behavior.
+- [ ] Test offline behavior.
+- [ ] Document what works.
+- [ ] Stop if recovery path is unclear.

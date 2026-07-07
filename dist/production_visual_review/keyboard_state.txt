@@ -1,0 +1,16 @@
+state_name: keyboard_state
+phone_size: 414x896
+state: JARVIS ready
+keyboard_visible: True
+help_visible: False
+mesh_visible: False
+orb_size: 154
+input_top: 458
+surface_text:
+- JARVIS
+- Mesh
+- ?
+- JARVIS ready
+- Ready when you are.
+- Command JARVIS
+- Send

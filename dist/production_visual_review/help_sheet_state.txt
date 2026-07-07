@@ -1,0 +1,46 @@
+state_name: help_sheet_state
+phone_size: 414x896
+state: Standby
+keyboard_visible: False
+help_visible: True
+mesh_visible: False
+orb_size: 292
+input_top: 790
+surface_text:
+- JARVIS
+- Mesh
+- ?
+- Standby
+- Ready when you are.
+- Command JARVIS
+- Send
+- Operate JARVIS
+- Start
+- Tap the orb to wake JARVIS.
+- Tap again to speak.
+- Tap while listening to finish the command.
+- Tap while speaking to stop.
+- Voice
+- JARVIS listens while this app is open.
+- A short pause ends the command.
+- Background wake word is not available in this build.
+- Typing
+- Use the command bar when voice is not ideal.
+- Return or Send routes the command.
+- Vision
+- Try: scan this, read this, look at this, detect objects.
+- OCR and barcode scan run after capture when available.
+- Object detection needs a bundled Core ML model.
+- Control Mesh
+- Use Mesh for phone-level actions.
+- Voice Control handles Show Grid, Tap, Scroll, Go Home, and screenshots.
+- Shortcuts and jarvis:// links return actions back to JARVIS.
+- States
+- Ready means JARVIS is awake.
+- Listening means it is hearing you.
+- Processing means it is routing the command.
+- Speaking means it is responding.
+- Limits
+- No hidden phone takeover without jailbreak.
+- Phone-level actions use Control Mesh, Voice Control, or Shortcuts.
+- Full phone takeover needs system access not available in this build.

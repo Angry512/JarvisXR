@@ -1,0 +1,47 @@
+[
+  {
+    "phrase": "Jarvis inspect",
+    "layer": "Vocal Shortcut, Shortcut, URL scheme",
+    "setup_path": "Create JARVIS Inspect Shortcut that opens jarvis://inspect, then map Vocal Shortcut phrase",
+    "can_do": "Open in-app inspection camera",
+    "cannot_do": "Run unbuilt OCR or object detection",
+    "confirmation_required": false,
+    "risk_level": "low"
+  },
+  {
+    "phrase": "Jarvis quiet",
+    "layer": "Vocal Shortcut, Shortcut, URL scheme",
+    "setup_path": "Open jarvis://command?text=quiet%20mode",
+    "can_do": "Disable JARVIS speech output",
+    "cannot_do": "Silence every system sound",
+    "confirmation_required": false,
+    "risk_level": "low"
+  },
+  {
+    "phrase": "Show Grid",
+    "layer": "Voice Control",
+    "setup_path": "Enable Voice Control",
+    "can_do": "Show numbered grid for visible tapping",
+    "cannot_do": "Inject hidden taps",
+    "confirmation_required": false,
+    "risk_level": "medium"
+  },
+  {
+    "phrase": "Open Spotify",
+    "layer": "Voice Control or Shortcut",
+    "setup_path": "Use built-in Voice Control app opening or Shortcut Open App",
+    "can_do": "Open Spotify",
+    "cannot_do": "Guarantee playback control until tested",
+    "confirmation_required": false,
+    "risk_level": "medium"
+  },
+  {
+    "phrase": "Jarvis return",
+    "layer": "Shortcut, URL scheme",
+    "setup_path": "Open JARVIS app or jarvis://command?text=status",
+    "can_do": "Return to JARVIS from allowed contexts",
+    "cannot_do": "Force return from every locked or restricted state",
+    "confirmation_required": false,
+    "risk_level": "low"
+  }
+]

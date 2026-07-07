@@ -1,0 +1,21 @@
+state_name: mesh_sheet_state
+phone_size: 414x896
+state: Standby
+keyboard_visible: False
+help_visible: False
+mesh_visible: True
+orb_size: 292
+input_top: 790
+surface_text:
+- JARVIS
+- Mesh
+- ?
+- Standby
+- Ready when you are.
+- Command JARVIS
+- Send
+- Control Mesh
+- JARVIS coordinates phone-level actions through public iOS routes.
+- Voice Control: Show Grid, Tap, Scroll, Go Home, Take Screenshot.
+- Shortcuts: return to JARVIS and route system preferences.
+- Guided Access: appliance mode after testing.

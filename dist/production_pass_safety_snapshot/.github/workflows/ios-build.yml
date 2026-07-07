@@ -1,0 +1,118 @@
+name: Build JarvisXR iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ios/JarvisXR/**"
+      - ".github/workflows/ios-build.yml"
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inspect runner and repository
+        run: |
+          pwd
+          find ios/JarvisXR -maxdepth 3 -print | sort
+          xcodebuild -version
+          xcrun simctl list runtimes | head -40
+
+      - name: Install XcodeGen
+        run: |
+          brew update
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Generate Xcode project
+        working-directory: ios/JarvisXR
+        run: |
+          mkdir -p build
+          xcodegen generate
+          find JarvisXR.xcodeproj -maxdepth 3 -print | sort
+          xcodebuild -list -project JarvisXR.xcodeproj | tee build/schemes.log
+
+      - name: Build JarvisXR for iPhoneOS
+        working-directory: ios/JarvisXR
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild \
+            -project JarvisXR.xcodeproj \
+            -scheme JarvisXR \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            clean build | tee build/build.log
+
+      - name: Run JarvisXR unit tests on simulator
+        working-directory: ios/JarvisXR
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          SIM_ID="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ {print $2; exit}')"
+          if [ -z "$SIM_ID" ]; then
+            echo "No available iPhone simulator found. Skipping simulator tests." | tee build/test.log
+            exit 0
+          fi
+          echo "Using simulator id: $SIM_ID" | tee build/test.log
+          xcodebuild \
+            -project JarvisXR.xcodeproj \
+            -scheme JarvisXR \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "id=$SIM_ID" \
+            -derivedDataPath build/TestDerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            test | tee -a build/test.log
+
+      - name: Package unsigned IPA
+        working-directory: ios/JarvisXR
+        run: |
+          set -e
+          APP_PATH="build/DerivedData/Build/Products/Release-iphoneos/JarvisXR.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "JarvisXR.app was not found at $APP_PATH" | tee BUILD_REAL_APP_STATUS.md
+            exit 1
+          fi
+          rm -rf build/Payload
+          mkdir -p build/Payload
+          cp -R "$APP_PATH" build/Payload/JarvisXR.app
+          (cd build && zip -qry JarvisXR-unsigned.ipa Payload)
+          if [ ! -s build/JarvisXR-unsigned.ipa ]; then
+            echo "Unsigned IPA packaging failed." | tee BUILD_REAL_APP_STATUS.md
+            exit 1
+          fi
+          {
+            echo "JarvisXR build summary"
+            echo "Runner: $(sw_vers -productVersion)"
+            echo "Xcode: $(xcodebuild -version | tr '\n' ' ')"
+            echo "Artifact: ios/JarvisXR/build/JarvisXR-unsigned.ipa"
+            echo "Size bytes: $(stat -f%z build/JarvisXR-unsigned.ipa)"
+            echo "Install with Sideloadly from Windows."
+          } | tee BUILD_REAL_APP_STATUS.md
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JarvisXR-unsigned-ipa
+          path: ios/JarvisXR/build/JarvisXR-unsigned.ipa
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: JarvisXR-build-output
+          if-no-files-found: warn
+          path: |
+            ios/JarvisXR/build/build.log
+            ios/JarvisXR/build/test.log
+            ios/JarvisXR/build/schemes.log
+            ios/JarvisXR/BUILD_REAL_APP_STATUS.md
