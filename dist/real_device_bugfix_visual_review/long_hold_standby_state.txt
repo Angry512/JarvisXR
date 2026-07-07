@@ -1,0 +1,16 @@
+state_name: long_hold_standby_state
+phone_size: 414x896
+state: Standby
+keyboard_visible: False
+help_visible: False
+mesh_visible: False
+orb_size: 292
+input_top: 790
+surface_text:
+- JARVIS
+- Mesh
+- ?
+- Standby
+- Standby.
+- Command JARVIS
+- Send

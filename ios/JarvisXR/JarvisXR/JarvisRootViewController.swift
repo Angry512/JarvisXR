@@ -18,7 +18,6 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private let submitButton = UIButton(type: .system)
     private let menuButton = UIButton(type: .system)
     private let helpButton = UIButton(type: .system)
-    private let bottomConstraintGuide = UIView()
 
     private var inputBottomConstraint: NSLayoutConstraint?
     private var wordmarkTopConstraint: NSLayoutConstraint?
@@ -28,6 +27,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private var responseHideWorkItem: DispatchWorkItem?
     private var didCheckFirstLaunch = false
     private var interfaceState: JarvisInteractionState = .standby
+    private var longPressSuppressesNextTap = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,7 +36,6 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         navigationController?.setNavigationBarHidden(true, animated: false)
         buildInterface()
         wireVoice()
-        registerKeyboardObservers()
         NotificationCenter.default.addObserver(self, selector: #selector(deepLinkReceived(_:)), name: .jarvisDeepLinkReceived, object: nil)
         setInterfaceState(speech.isEnabled ? .standby : .quiet, hint: "Ready when you are.")
     }
@@ -92,9 +91,11 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         orbView.isUserInteractionEnabled = true
         let tap = UITapGestureRecognizer(target: self, action: #selector(orbTapped))
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(orbLongPressed(_:)))
+        longPress.minimumPressDuration = 0.72
+        tap.require(toFail: longPress)
         orbView.addGestureRecognizer(tap)
         orbView.addGestureRecognizer(longPress)
-        orbView.accessibilityHint = "Tap to start or stop listening."
+        orbView.accessibilityHint = "Tap to wake, listen, or process. Long hold to standby."
 
         stateLabel.textColor = JarvisTheme.accentHot
         stateLabel.font = JarvisTheme.titleFont(size: 22)
@@ -165,15 +166,17 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         inputContainer.backgroundColor = UIColor(red: 0.025, green: 0.033, blue: 0.040, alpha: 0.92)
         inputContainer.layer.cornerRadius = JarvisDesignSystem.Radius.commandBar
 
-        [wordmarkLabel, subtitleLabel, orbView, stateLabel, hintLabel, transientResponseLabel, inputContainer, menuButton, helpButton, bottomConstraintGuide].forEach {
+        [wordmarkLabel, subtitleLabel, orbView, stateLabel, hintLabel, transientResponseLabel, inputContainer, menuButton, helpButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview($0)
         }
 
-        bottomConstraintGuide.isHidden = true
-        inputBottomConstraint = inputContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -14)
-        wordmarkTopConstraint = wordmarkLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20)
-        orbCenterYConstraint = orbView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -68)
+        inputBottomConstraint = inputContainer.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor, constant: -10)
+        inputBottomConstraint?.priority = .defaultHigh
+        let inputSafeBottomConstraint = inputContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10)
+        inputSafeBottomConstraint.priority = .defaultLow
+        wordmarkTopConstraint = wordmarkLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8)
+        orbCenterYConstraint = orbView.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor, constant: -54)
         orbWidthMultiplierConstraint = orbView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.74)
         orbMaxWidthConstraint = orbView.widthAnchor.constraint(lessThanOrEqualToConstant: 320)
 
@@ -186,12 +189,12 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
             subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             subtitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
 
-            menuButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 18),
+            menuButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             menuButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 18),
             menuButton.widthAnchor.constraint(equalToConstant: JarvisDesignSystem.Size.meshWidth),
             menuButton.heightAnchor.constraint(equalToConstant: JarvisDesignSystem.Size.meshHeight),
 
-            helpButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            helpButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 7),
             helpButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -18),
             helpButton.widthAnchor.constraint(equalToConstant: JarvisDesignSystem.Size.helpButton),
             helpButton.heightAnchor.constraint(equalToConstant: JarvisDesignSystem.Size.helpButton),
@@ -217,6 +220,8 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
             inputContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             inputContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             inputContainer.heightAnchor.constraint(equalToConstant: JarvisDesignSystem.Size.commandBarHeight),
+            inputContainer.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -10),
+            inputSafeBottomConstraint,
             inputBottomConstraint!,
 
             inputRow.leadingAnchor.constraint(equalTo: inputContainer.leadingAnchor, constant: 14),
@@ -246,7 +251,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         speech.onSpeechFinish = { [weak self] in
             guard let self else { return }
             if JarvisSpeechService.shared.isEnabled {
-                self.setInterfaceState(.done, hint: "Ready when you are.")
+                self.setInterfaceState(.ready, hint: "Ready when you are.")
             } else {
                 self.setInterfaceState(.quiet, hint: "Quiet mode.")
             }
@@ -263,7 +268,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
             case .processing:
                 self?.setInterfaceState(.processing, hint: "Working.")
             case .noSpeech:
-                self?.setInterfaceState(.done, hint: "No command heard.")
+                self?.setInterfaceState(.ready, hint: "No speech heard.")
             case .unavailable(let message):
                 self?.setInterfaceState(.blocked, hint: message)
                 self?.showTransient(message)
@@ -280,7 +285,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private func execute(_ text: String, source: String = "typed") {
         let commandText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !commandText.isEmpty else {
-            setInterfaceState(.standby, hint: "Ready when you are.")
+            setInterfaceState(.ready, hint: "Ready when you are.")
             return
         }
 
@@ -407,18 +412,24 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func orbTapped() {
+        if longPressSuppressesNextTap {
+            longPressSuppressesNextTap = false
+            return
+        }
         switch interfaceState {
-        case .standby, .done, .blocked, .quiet:
+        case .standby:
             speech.isEnabled = true
             setInterfaceState(.ready, hint: "JARVIS ready.")
             speech.speak("JARVIS ready.", notifyState: false)
-        case .ready:
+        case .ready, .done, .blocked, .quiet:
             voiceInput.startListening()
-        case .listening, .heardYou, .processing:
-            voiceInput.stopListening()
+        case .listening, .heardYou:
+            voiceInput.stopListening(process: true)
+        case .processing:
+            showTransient("Processing.")
         case .speaking:
             speech.stop()
-            setInterfaceState(.done, hint: "Speech stopped.")
+            setInterfaceState(.ready, hint: "Speech stopped.")
         case .inspection:
             voiceInput.startListening()
         }
@@ -436,10 +447,26 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
 
     @objc private func orbLongPressed(_ gesture: UILongPressGestureRecognizer) {
         if gesture.state == .began {
-            voiceInput.startListening()
-        } else if gesture.state == .ended || gesture.state == .cancelled {
-            voiceInput.stopListening()
+            longPressSuppressesNextTap = true
+            enterStandbyFromLongPress()
+        } else if gesture.state == .ended || gesture.state == .cancelled || gesture.state == .failed {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                self?.longPressSuppressesNextTap = false
+            }
         }
+    }
+
+    private func enterStandbyFromLongPress() {
+        responseHideWorkItem?.cancel()
+        transientResponseLabel.alpha = 0
+        if voiceInput.isListening {
+            voiceInput.stopListening(process: false)
+        } else {
+            voiceInput.cancel()
+        }
+        speech.stop()
+        commandField.resignFirstResponder()
+        setInterfaceState(.standby, hint: "Standby.")
     }
 
     private func submitCurrentCommand() {
@@ -493,49 +520,6 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
             controlMeshTapped()
         case .unknown(let raw):
             render(response: JarvisResponse(status: .refused, spokenResponse: "Deep link not recognized.", displayResponse: "Unknown JARVIS deep link: \(raw)", shouldSpeak: false))
-        }
-    }
-
-    private func registerKeyboardObservers() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardChanged(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
-
-    @objc private func keyboardChanged(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let frame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
-              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
-            return
-        }
-        let converted = view.convert(frame, from: nil)
-        let overlap = max(0, view.bounds.maxY - converted.minY)
-        applyKeyboardLayout(overlap: overlap, duration: duration)
-    }
-
-    private func applyKeyboardLayout(overlap: CGFloat, duration: TimeInterval) {
-        // The iPhone XR keyboard occupies a large part of the 414 x 896 point
-        // portrait surface. When it appears, JARVIS enters compact command mode:
-        // the orb shrinks, state remains visible, and the input bar pins just
-        // above the keyboard instead of letting the whole screen feel crushed.
-        let result = JarvisXRLayoutModel.layout(
-            screenHeight: view.bounds.height,
-            safeTop: view.safeAreaInsets.top,
-            safeBottom: view.safeAreaInsets.bottom,
-            keyboardOverlap: overlap
-        )
-        inputBottomConstraint?.constant = -result.inputBottomInset
-        wordmarkTopConstraint?.constant = result.titleTopInset
-        orbCenterYConstraint?.constant = result.orbCenterYOffset
-        if let old = orbWidthMultiplierConstraint {
-            old.isActive = false
-        }
-        orbWidthMultiplierConstraint = orbView.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: result.orbWidthMultiplier)
-        orbWidthMultiplierConstraint?.isActive = true
-        orbMaxWidthConstraint?.constant = result.orbMaxWidth
-        subtitleLabel.alpha = result.compact ? 0 : 1
-        transientResponseLabel.alpha = min(transientResponseLabel.alpha, result.transientAlpha)
-        UIView.animate(withDuration: duration) {
-            self.view.layoutIfNeeded()
         }
     }
 

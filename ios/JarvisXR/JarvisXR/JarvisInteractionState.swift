@@ -1,5 +1,4 @@
 import Foundation
-import UIKit
 
 enum JarvisInteractionState: String {
     case standby = "Standby"
@@ -104,52 +103,5 @@ final class JarvisAssistantCore {
             return .voice
         }
         return response.status == .ok ? .deviceStatus : .unsupported
-    }
-}
-
-struct JarvisKeyboardLayoutResult {
-    let compact: Bool
-    let inputBottomInset: CGFloat
-    let orbWidthMultiplier: CGFloat
-    let orbMaxWidth: CGFloat
-    let orbCenterYOffset: CGFloat
-    let titleTopInset: CGFloat
-    let transientAlpha: CGFloat
-}
-
-enum JarvisXRLayoutModel {
-    static let designWidth: CGFloat = 414
-    static let designHeight: CGFloat = 896
-
-    static func layout(
-        screenHeight: CGFloat,
-        safeTop: CGFloat,
-        safeBottom: CGFloat,
-        keyboardOverlap: CGFloat
-    ) -> JarvisKeyboardLayoutResult {
-        let keyboardVisible = keyboardOverlap > 20
-        if keyboardVisible {
-            let bottomInset = keyboardOverlap + 10
-            let usableHeight = max(360, screenHeight - safeTop - bottomInset)
-            let compactOrbMax = min(212, usableHeight * 0.34)
-            return JarvisKeyboardLayoutResult(
-                compact: true,
-                inputBottomInset: bottomInset,
-                orbWidthMultiplier: 0.46,
-                orbMaxWidth: compactOrbMax,
-                orbCenterYOffset: -usableHeight * 0.20,
-                titleTopInset: 10,
-                transientAlpha: 0.72
-            )
-        }
-        return JarvisKeyboardLayoutResult(
-            compact: false,
-            inputBottomInset: safeBottom > 0 ? 14 : 18,
-            orbWidthMultiplier: 0.74,
-            orbMaxWidth: 320,
-            orbCenterYOffset: -68,
-            titleTopInset: 20,
-            transientAlpha: 1.0
-        )
     }
 }

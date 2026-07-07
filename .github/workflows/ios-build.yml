@@ -99,6 +99,10 @@ jobs:
             echo "Install with Sideloadly from Windows."
           } | tee BUILD_REAL_APP_STATUS.md
 
+      - name: Audit unsigned IPA
+        run: |
+          python3 tools/audit_ipa.py ios/JarvisXR/build/JarvisXR-unsigned.ipa | tee ios/JarvisXR/build/ipa-audit.log
+
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
@@ -115,4 +119,5 @@ jobs:
             ios/JarvisXR/build/build.log
             ios/JarvisXR/build/test.log
             ios/JarvisXR/build/schemes.log
+            ios/JarvisXR/build/ipa-audit.log
             ios/JarvisXR/BUILD_REAL_APP_STATUS.md

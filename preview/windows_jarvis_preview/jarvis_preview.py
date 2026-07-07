@@ -19,6 +19,7 @@ ROOT_DIR = APP_DIR.parents[1]
 BUNDLE_DIR = ROOT_DIR / "dist" / "jarvis_local_approval_bundle"
 DEVELOPER_REPORT = BUNDLE_DIR / "preview_developer_report.txt"
 VISUAL_REVIEW_DIR = ROOT_DIR / "dist" / "production_visual_review"
+LONG_HOLD_SECONDS = 0.72
 
 PHONE_WIDTH = 414
 PHONE_HEIGHT = 896
@@ -43,7 +44,7 @@ COLORS = {
 }
 
 HELP_SECTIONS = (
-    ("Start", ("Tap the orb to wake JARVIS.", "Tap again to speak.", "Tap while listening to finish the command.", "Tap while speaking to stop.")),
+    ("Start", ("Tap once from standby to wake JARVIS.", "Tap again to listen.", "Tap while listening to process the command.", "Long hold the orb to return to standby.")),
     ("Voice", ("JARVIS listens while this app is open.", "A short pause ends the command.", "Background wake word is not available in this build.")),
     ("Typing", ("Use the command bar when voice is not ideal.", "Return or Send routes the command.")),
     ("Vision", ("Try: scan this, read this, look at this, detect objects.", "OCR and barcode scan run after capture when available.", "Object detection needs a bundled Core ML model.")),
@@ -194,21 +195,44 @@ class InteractionModel:
         self.partial_transcript = ""
         self.last_response = "Ready when you are."
         self.history: list[str] = []
+        self.pointer_is_down = False
+        self.long_hold_consumed = False
 
     def orb_tap(self) -> str:
+        return self.pointer_up(after_seconds=0.12)
+
+    def pointer_down(self) -> None:
+        self.pointer_is_down = True
+        self.long_hold_consumed = False
+
+    def pointer_up(self, after_seconds: float) -> str:
+        if not self.pointer_is_down:
+            self.pointer_down()
+        self.pointer_is_down = False
+        if after_seconds >= LONG_HOLD_SECONDS:
+            self.long_hold_consumed = True
+            return self.long_press()
+        if self.long_hold_consumed:
+            self.long_hold_consumed = False
+            return self.state
+        return self._short_tap()
+
+    def _short_tap(self) -> str:
         self._close_sheets()
-        if self.state in {"Standby", "Done", "Blocked"}:
+        if self.state == "Standby":
             self.state = "JARVIS ready"
             self.last_response = "Ready when you are."
-        elif self.state == "JARVIS ready":
+        elif self.state in {"JARVIS ready", "Done", "Blocked"}:
             self.state = "Listening"
             self.partial_transcript = ""
             self.last_response = "Listening."
         elif self.state == "Listening":
             self.endpoint()
         elif self.state == "Speaking":
-            self.state = "Done"
+            self.state = "JARVIS ready"
             self.last_response = "Speech stopped."
+        elif self.state == "Processing":
+            self.last_response = "Processing."
         else:
             self.state = "JARVIS ready"
             self.last_response = "Ready when you are."
@@ -216,9 +240,9 @@ class InteractionModel:
 
     def long_press(self) -> str:
         self._close_sheets()
-        self.state = "Listening"
+        self.state = "Standby"
         self.partial_transcript = ""
-        self.last_response = "Listening."
+        self.last_response = "Standby."
         return self.state
 
     def open_help(self) -> None:
@@ -246,8 +270,8 @@ class InteractionModel:
 
     def no_speech(self) -> None:
         self._close_sheets()
-        self.state = "Done"
-        self.last_response = "No command heard."
+        self.state = "JARVIS ready"
+        self.last_response = "No speech heard."
 
     def speaking(self) -> None:
         self._close_sheets()
@@ -274,10 +298,10 @@ class InteractionModel:
 
     def endpoint(self) -> PreviewResponse:
         transcript = self.partial_transcript.strip()
-        self.state = "Heard you" if transcript else "Done"
+        self.state = "Heard you" if transcript else "JARVIS ready"
         if not transcript:
-            self.last_response = "No command heard."
-            return PreviewResponse("refused", "No command heard.", "No command heard.", "Done")
+            self.last_response = "No speech heard."
+            return PreviewResponse("refused", "No speech heard.", "No speech heard.", "JARVIS ready")
         response = self.process(transcript, source="voice")
         return response
 
@@ -698,14 +722,36 @@ def run_gui(product_only: bool = False) -> None:
 def visual_state_reports() -> dict[str, str]:
     states: dict[str, InteractionModel] = {}
 
-    idle = InteractionModel()
-    idle.orb_tap()
-    states["idle_ready_state"] = idle
+    standby = InteractionModel()
+    states["standby_state"] = standby
+
+    ready = InteractionModel()
+    ready.orb_tap()
+    states["ready_state"] = ready
 
     listening = InteractionModel()
     listening.orb_tap()
     listening.orb_tap()
     states["listening_state"] = listening
+
+    listening_with_transcript = InteractionModel()
+    listening_with_transcript.orb_tap()
+    listening_with_transcript.orb_tap()
+    listening_with_transcript.simulate_partial("scan this")
+    states["listening_with_transcript_state"] = listening_with_transcript
+
+    manual_endpoint = InteractionModel()
+    manual_endpoint.orb_tap()
+    manual_endpoint.orb_tap()
+    manual_endpoint.simulate_partial("scan this")
+    manual_endpoint.orb_tap()
+    states["manual_endpoint_processed_state"] = manual_endpoint
+
+    long_hold = InteractionModel()
+    long_hold.orb_tap()
+    long_hold.pointer_down()
+    long_hold.pointer_up(after_seconds=LONG_HOLD_SECONDS)
+    states["long_hold_standby_state"] = long_hold
 
     speaking = InteractionModel()
     speaking.speaking()

@@ -38,10 +38,14 @@ final class JarvisVoiceInputService {
         audioEngine.isRunning
     }
 
+    var currentTranscript: String {
+        lastTranscript
+    }
+
     private init() {}
 
     func toggleListening() {
-        isListening ? stopListening() : startListening()
+        isListening ? stopListening(process: true) : startListening()
     }
 
     func startListening() {
@@ -70,9 +74,9 @@ final class JarvisVoiceInputService {
         }
     }
 
-    func stopListening() {
+    func stopListening(process: Bool = true) {
         guard audioEngine.isRunning else { return }
-        finishRecognition()
+        finishRecognition(process: process)
     }
 
     func cancel() {
@@ -141,16 +145,16 @@ final class JarvisVoiceInputService {
                     }
                 }
                 if result.isFinal {
-                    self.finishRecognition()
+                    self.finishRecognition(process: true)
                 }
             }
             if error != nil {
-                self.finishRecognition()
+                self.finishRecognition(process: true)
             }
         }
     }
 
-    private func finishRecognition() {
+    private func finishRecognition(process: Bool) {
         guard !finishing else { return }
         finishing = true
         clearTimers()
@@ -161,9 +165,11 @@ final class JarvisVoiceInputService {
             self.audioEngine.inputNode.removeTap(onBus: 0)
             self.request = nil
             self.task = nil
-            if final.isEmpty {
-                self.onStateChange?(.noSpeech)
+            if !process {
+                self.lastTranscript = ""
                 self.onStateChange?(.standby)
+            } else if final.isEmpty {
+                self.onStateChange?(.noSpeech)
             } else {
                 self.onStateChange?(.heardYou(final))
                 self.onStateChange?(.processing)
@@ -177,11 +183,11 @@ final class JarvisVoiceInputService {
         noSpeechTimer = Timer.scheduledTimer(withTimeInterval: noSpeechTimeout, repeats: false) { [weak self] _ in
             guard let self else { return }
             if self.lastTranscript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                self.finishRecognition()
+                self.finishRecognition(process: true)
             }
         }
         maxListenTimer = Timer.scheduledTimer(withTimeInterval: maximumListenDuration, repeats: false) { [weak self] _ in
-            self?.finishRecognition()
+            self?.finishRecognition(process: true)
         }
     }
 
@@ -193,7 +199,7 @@ final class JarvisVoiceInputService {
             if elapsed < self.minimumListenDuration {
                 self.scheduleSilenceEndpoint()
             } else {
-                self.finishRecognition()
+                self.finishRecognition(process: true)
             }
         }
     }

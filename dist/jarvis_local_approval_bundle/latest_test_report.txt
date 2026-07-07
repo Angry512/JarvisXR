@@ -1,6 +1,6 @@
 JARVIS local interaction report
-timestamp: 2026-07-06T20:01:52
-passed: 37
+timestamp: 2026-07-06T21:07:25
+passed: 60
 failed: 0
 
 Passed checks:
@@ -14,6 +14,29 @@ Passed checks:
 - no Recent Activity in product Swift
 - no response panel label in product Swift
 - no debug chips in product Swift
+- tap_from_standby_enters_ready_not_listening
+- tap_from_ready_starts_listening
+- tap_from_listening_processes_transcript_not_standby
+- tap_from_listening_with_scan_routes_inspection
+- tap_from_listening_with_read_routes_ocr_or_inspection
+- tap_from_listening_with_detect_routes_inspection_model_gated
+- listening_tap_with_empty_transcript_returns_no_speech_then_ready
+- long_hold_from_ready_enters_standby
+- long_hold_from_listening_cancels_without_processing_and_enters_standby
+- long_hold_from_speaking_stops_speech_and_enters_standby
+- long_hold_does_not_trigger_tap_on_release
+- normal_tap_never_enters_standby
+- typed_command_still_routes
+- help_text_contains_correct_tap_hold_sequence
+- Swift source has UILongPressGestureRecognizer
+- Swift tap waits for long press failure
+- Swift root does not call standby from normal listening stop
+- Voice service supports process and cancel stop modes
+- Voice no speech does not force standby
+- LaunchScreen configured in Info.plist/project.yml
+- README markdown excluded from app resources
+- XR layout constants not in real UIKit source
+- No fake object model claims
 - help opens
 - help explains in-app voice limit
 - help includes vision commands

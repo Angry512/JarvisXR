@@ -34,7 +34,6 @@ final class JarvisControlMeshPlanner {
             "open youtube": app("youtube", "Opening YouTube.", "Opening YouTube.", "youtube://"),
             "open safari": app("safari", "Opening Safari.", "Opening Safari.", "https://www.google.com"),
             "open spotify": app("spotify", "Opening Spotify.", "Opening Spotify.", "spotify://"),
-            "play music": app("music", "Opening Spotify.", "Opening Spotify for music.", "spotify://"),
             "make the screen darker": shortcut("brightness", "Use the JARVIS Dim Shortcut.", "Run the JARVIS Dim Shortcut, or say Turn Brightness Down with Voice Control.", [:]),
             "turn on night mode": shortcut("night", "Use the JARVIS Night Shortcut.", "Run the JARVIS Night Shortcut for brightness, Focus, or appearance.", [:]),
             "night mode": shortcut("night", "Use the JARVIS Night Shortcut.", "Run the JARVIS Night Shortcut for brightness, Focus, or appearance.", [:])

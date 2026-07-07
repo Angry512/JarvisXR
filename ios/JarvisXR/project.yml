@@ -14,7 +14,14 @@ targets:
     type: application
     platform: iOS
     sources:
-      - JarvisXR
+      - path: JarvisXR
+        excludes:
+          - Assets.xcassets
+          - LaunchScreen.storyboard
+          - Models/README.md
+    resources:
+      - path: JarvisXR/Assets.xcassets
+      - path: JarvisXR/LaunchScreen.storyboard
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.amrik.jarvisxr

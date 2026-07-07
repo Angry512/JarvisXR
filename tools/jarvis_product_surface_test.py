@@ -34,6 +34,10 @@ def main() -> int:
     camera = read(IOS_ROOT / "JarvisCameraViewController.swift")
     vision = read(IOS_ROOT / "JarvisVisionInterfaces.swift")
     preview_text = read(PREVIEW)
+    voice = read(IOS_ROOT / "JarvisVoiceInputService.swift")
+    state = read(IOS_ROOT / "JarvisInteractionState.swift")
+    info_plist = read(IOS_ROOT / "Info.plist")
+    project_yml = read(ROOT / "ios" / "JarvisXR" / "project.yml")
 
     failures: list[str] = []
 
@@ -61,7 +65,7 @@ def main() -> int:
     check("Orb flow works", _orb_flow_ok(preview))
     check("Speaking tap stops", _speaking_stop_ok(preview))
     check("Permission denied state exists", _state_contains(preview, "permission_denied", "permission"))
-    check("No speech state exists", _state_contains(preview, "no_speech", "No command heard"))
+    check("No speech state exists", _state_contains(preview, "no_speech", "No speech heard"))
     check("Scan routes to inspection", preview.InteractionModel().process("scan this").state == "Inspection")
     check("Read routes to OCR", preview.InteractionModel().process("read this").action == "ocr")
     detect = preview.InteractionModel().process("detect objects")
@@ -76,6 +80,15 @@ def main() -> int:
     check("No product-facing XR in root", "XR" not in root.replace("JarvisXRLayoutModel", "").replace("iPhone XR keyboard", ""))
     check("No WebView stack", all(term not in root + help_swift + router + camera for term in ["WebView", "WKWebView"]))
     check("No private implementation strings", all(term not in root + router + camera for term in ["UIApplication.shared.perform", "LSApplicationWorkspace", "SpringBoardServices"]))
+    check("Tap and long press are separate recognizers", "UITapGestureRecognizer" in root and "UILongPressGestureRecognizer" in root and "tap.require(toFail: longPress)" in root)
+    check("Long press returns standby", "enterStandbyFromLongPress" in root and "voiceInput.stopListening(process: false)" in root)
+    check("Manual listening stop processes transcript", "voiceInput.stopListening(process: true)" in root and "onFinalTranscript" in voice)
+    check("No speech returns ready", "case .noSpeech:" in root and "setInterfaceState(.ready, hint: \"No speech heard.\")" in root)
+    check("Real UIKit layout uses keyboardLayoutGuide", "keyboardLayoutGuide.topAnchor" in root and "keyboardWillChangeFrameNotification" not in root)
+    check("Real UIKit source avoids copied preview layout model", "JarvisXRLayoutModel" not in root + state)
+    check("Launch screen configured", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "LaunchScreen.storyboard" in project_yml)
+    check("Markdown model notes excluded from app bundle", "Models/README.md" in project_yml)
+    check("No primary Spotify music example", "Try: open Spotify" not in root + help_swift + preview_text and "play music" not in help_swift)
 
     if failures:
         print("JARVIS product surface test failed:")
@@ -110,7 +123,7 @@ def _orb_flow_ok(preview) -> bool:
 def _speaking_stop_ok(preview) -> bool:
     model = preview.InteractionModel()
     model.speaking()
-    return model.orb_tap() == "Done"
+    return model.orb_tap() == "JARVIS ready"
 
 
 def _state_contains(preview, method_name: str, expected: str) -> bool:

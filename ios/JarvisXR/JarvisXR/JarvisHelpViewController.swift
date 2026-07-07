@@ -47,10 +47,11 @@ final class JarvisHelpViewController: UIViewController {
         stackView.addArrangedSubview(intro)
 
         addSection("Start", [
-            "Tap the orb to wake JARVIS.",
-            "Tap again to speak.",
-            "Tap while listening to finish the command.",
-            "Tap while JARVIS is speaking to stop."
+            "Tap once from standby to wake JARVIS.",
+            "Tap again to listen.",
+            "Tap while listening to process the command.",
+            "Tap while JARVIS is speaking to stop.",
+            "Long hold the orb to return to standby."
         ])
         addSection("Voice", [
             "JARVIS listens while this app is open.",

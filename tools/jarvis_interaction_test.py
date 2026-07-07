@@ -38,9 +38,14 @@ def main() -> int:
     surface_text = "\n".join(model.product_surface_texts()).lower()
     swift_root = (IOS_ROOT / "JarvisRootViewController.swift").read_text(encoding="utf-8")
     swift_help = (IOS_ROOT / "JarvisHelpViewController.swift").read_text(encoding="utf-8")
+    swift_voice = (IOS_ROOT / "JarvisVoiceInputService.swift").read_text(encoding="utf-8")
+    swift_state = (IOS_ROOT / "JarvisInteractionState.swift").read_text(encoding="utf-8")
     swift_router = (IOS_ROOT / "JarvisCommandRouter.swift").read_text(encoding="utf-8")
     swift_planner = (IOS_ROOT / "JarvisCommandPlan.swift").read_text(encoding="utf-8")
     swift_mesh = (IOS_ROOT / "JarvisControlMeshPlanner.swift").read_text(encoding="utf-8")
+    swift_vision = (IOS_ROOT / "JarvisVisionInterfaces.swift").read_text(encoding="utf-8")
+    info_plist = (IOS_ROOT / "Info.plist").read_text(encoding="utf-8")
+    project_yml = (ROOT / "ios" / "JarvisXR" / "project.yml").read_text(encoding="utf-8")
 
     check("help icon model exists", hasattr(model, "open_help"))
     check("help icon exists in iOS source", 'setTitle("?",' in swift_root)
@@ -52,6 +57,81 @@ def main() -> int:
     check("no Recent Activity in product Swift", "Recent Activity" not in swift_root)
     check("no response panel label in product Swift", "JARVIS RESPONSE" not in swift_root)
     check("no debug chips in product Swift", "Wi-Fi path available" not in swift_root and "offline tools remain" not in swift_root and "guided ready" not in swift_root)
+
+    standby_model = preview.InteractionModel()
+    check("tap_from_standby_enters_ready_not_listening", standby_model.orb_tap() == "JARVIS ready")
+    check("tap_from_ready_starts_listening", standby_model.orb_tap() == "Listening")
+    standby_model.simulate_partial("status")
+    before_endpoint = standby_model.state
+    response = standby_model.orb_tap()
+    check("tap_from_listening_processes_transcript_not_standby", before_endpoint == "Listening" and response != "Standby" and standby_model.state != "Standby")
+
+    scan_model = preview.InteractionModel()
+    scan_model.orb_tap()
+    scan_model.orb_tap()
+    scan_model.simulate_partial("scan this")
+    check("tap_from_listening_with_scan_routes_inspection", scan_model.orb_tap() == "Inspection")
+
+    read_model = preview.InteractionModel()
+    read_model.orb_tap()
+    read_model.orb_tap()
+    read_model.simulate_partial("read this")
+    read_response = read_model.endpoint()
+    check("tap_from_listening_with_read_routes_ocr_or_inspection", read_response.action == "ocr" and read_model.state == "Inspection")
+
+    detect_model = preview.InteractionModel()
+    detect_model.orb_tap()
+    detect_model.orb_tap()
+    detect_model.simulate_partial("detect objects")
+    detect_response_from_voice = detect_model.endpoint()
+    check("tap_from_listening_with_detect_routes_inspection_model_gated", detect_response_from_voice.action == "object_model_missing" and detect_model.state == "Inspection")
+
+    empty_model = preview.InteractionModel()
+    empty_model.orb_tap()
+    empty_model.orb_tap()
+    check("listening_tap_with_empty_transcript_returns_no_speech_then_ready", empty_model.orb_tap() == "JARVIS ready" and "no speech" in empty_model.last_response.lower())
+
+    hold_ready = preview.InteractionModel()
+    hold_ready.orb_tap()
+    check("long_hold_from_ready_enters_standby", hold_ready.pointer_up(after_seconds=preview.LONG_HOLD_SECONDS) == "Standby")
+
+    hold_listening = preview.InteractionModel()
+    hold_listening.orb_tap()
+    hold_listening.orb_tap()
+    hold_listening.simulate_partial("scan this")
+    check("long_hold_from_listening_cancels_without_processing_and_enters_standby", hold_listening.pointer_up(after_seconds=preview.LONG_HOLD_SECONDS) == "Standby" and hold_listening.partial_transcript == "")
+
+    hold_speaking = preview.InteractionModel()
+    hold_speaking.speaking()
+    check("long_hold_from_speaking_stops_speech_and_enters_standby", hold_speaking.pointer_up(after_seconds=preview.LONG_HOLD_SECONDS) == "Standby")
+
+    no_tap_after_hold = preview.InteractionModel()
+    no_tap_after_hold.orb_tap()
+    no_tap_after_hold.pointer_down()
+    released_state = no_tap_after_hold.pointer_up(after_seconds=preview.LONG_HOLD_SECONDS)
+    after_release_state = no_tap_after_hold.state
+    check("long_hold_does_not_trigger_tap_on_release", released_state == "Standby" and after_release_state == "Standby")
+
+    normal_tap_states = []
+    normal_tap = preview.InteractionModel()
+    for _ in range(4):
+        normal_tap_states.append(normal_tap.orb_tap())
+    check("normal_tap_never_enters_standby", "Standby" not in normal_tap_states)
+
+    typed_response = preview.InteractionModel().process("scan this")
+    check("typed_command_still_routes", typed_response.action == "inspect" and typed_response.state == "Inspection")
+
+    help_lower = swift_help.lower()
+    check("help_text_contains_correct_tap_hold_sequence", all(term in help_lower for term in ["tap once from standby", "tap again to listen", "tap while listening to process", "long hold the orb"]))
+    check("Swift source has UILongPressGestureRecognizer", "UILongPressGestureRecognizer" in swift_root and "minimumPressDuration = 0.72" in swift_root)
+    check("Swift tap waits for long press failure", "tap.require(toFail: longPress)" in swift_root)
+    check("Swift root does not call standby from normal listening stop", "case .listening, .heardYou:\n            voiceInput.stopListening(process: true)" in swift_root and "case .processing:\n            showTransient(\"Processing.\")" in swift_root)
+    check("Voice service supports process and cancel stop modes", "func stopListening(process: Bool = true)" in swift_voice and "finishRecognition(process: process)" in swift_voice)
+    check("Voice no speech does not force standby", "self.onStateChange?(.noSpeech)\n                self.onStateChange?(.standby)" not in swift_voice)
+    check("LaunchScreen configured in Info.plist/project.yml", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "LaunchScreen.storyboard" in project_yml)
+    check("README markdown excluded from app resources", "Models/README.md" in project_yml)
+    check("XR layout constants not in real UIKit source", "JarvisXRLayoutModel" not in swift_root + swift_state and "designHeight: CGFloat = 896" not in swift_state)
+    check("No fake object model claims", "Object model not installed" in swift_vision and "object_model_required" in swift_router and "Object detection ready" not in swift_router)
 
     model.open_help()
     help_text = "\n".join(model.product_surface_texts()).lower()
@@ -73,7 +153,7 @@ def main() -> int:
 
     model.speaking()
     check("speaking state can be entered", model.state == "Speaking")
-    check("speaking tap stops speaking", model.orb_tap() == "Done")
+    check("speaking tap stops speaking", model.orb_tap() == "JARVIS ready")
 
     model.toggle_keyboard()
     layout_open = model.layout()

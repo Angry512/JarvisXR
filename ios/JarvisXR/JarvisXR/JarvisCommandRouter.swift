@@ -442,7 +442,7 @@ final class JarvisCommandRouter {
         3. Turn Wi-Fi off and verify offline commands still work.
         4. Enable Guided Access only after you have tested the exit path.
         """
-        return .ok("Next test steps ready.", display: display)
+        return .ok("Readiness checklist ready.", display: display)
     }
 
     private func convert(_ raw: String) -> JarvisResponse {
@@ -529,8 +529,6 @@ final class JarvisCommandRouter {
             "dictate": ("Use Voice Control dictation.", "Place the cursor, then dictate.", [:]),
             "return to jarvis": ("Return to JARVIS.", "Use the JARVIS Return Shortcut or open JARVIS from Home.", [:]),
             "open spotify": ("Opening Spotify.", "Opening Spotify.", dataURL("spotify://")),
-            "play music": ("Opening Spotify.", "Opening Spotify for music.", dataURL("spotify://")),
-            "open music": ("Opening Spotify.", "Opening Spotify for music.", dataURL("spotify://")),
             "open safari": ("Opening Safari.", "Opening Safari.", dataURL("https://www.google.com")),
             "open youtube": ("Opening YouTube.", "Opening YouTube.", dataURL("youtube://")),
             "search web": ("Open Safari for search.", "Opening Safari. Use local tools offline.", dataURL("https://www.google.com/search?q=")),

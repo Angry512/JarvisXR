@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PREVIEW = ROOT / "preview" / "windows_jarvis_preview" / "jarvis_preview.py"
-OUT = ROOT / "dist" / "production_visual_review"
+OUT = ROOT / "dist" / "real_device_bugfix_visual_review"
 BUNDLE_REPORT = ROOT / "dist" / "jarvis_local_approval_bundle" / "latest_visual_report.txt"
 
 
@@ -27,7 +27,7 @@ def main() -> int:
     reports = preview.visual_state_reports()
     OUT.mkdir(parents=True, exist_ok=True)
     lines = [
-        "JARVIS production visual review",
+        "JARVIS real-device bugfix visual review",
         f"timestamp: {dt.datetime.now().isoformat(timespec='seconds')}",
         f"states: {len(reports)}",
         "",

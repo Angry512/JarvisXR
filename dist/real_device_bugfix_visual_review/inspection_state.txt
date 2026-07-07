@@ -1,0 +1,16 @@
+state_name: inspection_state
+phone_size: 414x896
+state: Inspection
+keyboard_visible: False
+help_visible: False
+mesh_visible: False
+orb_size: 292
+input_top: 790
+surface_text:
+- JARVIS
+- Mesh
+- ?
+- Inspection
+- Opening inspection.
+- Command JARVIS
+- Send

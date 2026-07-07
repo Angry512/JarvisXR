@@ -1,13 +1,17 @@
-JARVIS production visual review
-timestamp: 2026-07-06T20:01:52
-states: 9
+JARVIS real-device bugfix visual review
+timestamp: 2026-07-06T21:07:26
+states: 13
 
-- idle_ready_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\idle_ready_state.txt
-- listening_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\listening_state.txt
-- speaking_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\speaking_state.txt
-- keyboard_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\keyboard_state.txt
-- help_sheet_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\help_sheet_state.txt
-- mesh_sheet_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\mesh_sheet_state.txt
-- inspection_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\inspection_state.txt
-- permission_denied_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\permission_denied_state.txt
-- object_model_missing_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\production_visual_review\object_model_missing_state.txt
+- standby_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\standby_state.txt
+- ready_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\ready_state.txt
+- listening_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\listening_state.txt
+- listening_with_transcript_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\listening_with_transcript_state.txt
+- manual_endpoint_processed_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\manual_endpoint_processed_state.txt
+- long_hold_standby_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\long_hold_standby_state.txt
+- speaking_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\speaking_state.txt
+- keyboard_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\keyboard_state.txt
+- help_sheet_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\help_sheet_state.txt
+- mesh_sheet_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\mesh_sheet_state.txt
+- inspection_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\inspection_state.txt
+- permission_denied_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\permission_denied_state.txt
+- object_model_missing_state: C:\Users\amrik\Documents\Codex\2026-07-04\you-are-building-jarvisos-for-iphone\jarvis-iphone6\dist\real_device_bugfix_visual_review\object_model_missing_state.txt
