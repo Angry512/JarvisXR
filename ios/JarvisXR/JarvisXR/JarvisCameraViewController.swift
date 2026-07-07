@@ -20,6 +20,14 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         view.backgroundColor = JarvisTheme.background
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneTapped))
         buildInterface()
+        if ProcessInfo.processInfo.arguments.contains("-JARVIS_UI_TESTING") {
+            if visualStateArgument() == "object_model_missing" {
+                statusLabel.text = "Object model not installed. Text and code scanning are active."
+            } else {
+                statusLabel.text = "Inspection ready. Simulator visual proof mode."
+            }
+            return
+        }
         requestCamera()
     }
 
@@ -33,12 +41,15 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         statusLabel.textColor = JarvisTheme.text
         statusLabel.font = JarvisTheme.bodyFont(size: 15)
         statusLabel.numberOfLines = 0
+        statusLabel.accessibilityIdentifier = "jarvis.inspection.status"
 
         imageView.backgroundColor = JarvisTheme.panel
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
+        imageView.accessibilityIdentifier = "jarvis.inspection.preview"
         JarvisTheme.stylePanel(imageView)
         scanOverlay.translatesAutoresizingMaskIntoConstraints = false
+        scanOverlay.accessibilityIdentifier = "jarvis.inspection.overlay"
         imageView.addSubview(scanOverlay)
 
         let captureButton = JarvisTheme.button(title: "Scan")
@@ -53,7 +64,9 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         hooksLabel.numberOfLines = 0
 
         captureButton.accessibilityLabel = "Capture inspection photo"
+        captureButton.accessibilityIdentifier = "jarvis.inspection.scan"
         torchButton.accessibilityLabel = "Toggle inspection torch"
+        torchButton.accessibilityIdentifier = "jarvis.inspection.light"
 
         let buttonRow = UIStackView(arrangedSubviews: [captureButton, torchButton])
         buttonRow.axis = .horizontal
@@ -291,6 +304,13 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
 
     private func showUnavailable(_ message: String) {
         statusLabel.text = message
+    }
+
+    private func visualStateArgument() -> String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-JARVIS_VISUAL_STATE"),
+              arguments.indices.contains(index + 1) else { return nil }
+        return arguments[index + 1]
     }
 
     @objc private func doneTapped() {

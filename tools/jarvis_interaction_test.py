@@ -132,6 +132,9 @@ def main() -> int:
     check("README markdown excluded from app resources", "Models/README.md" in project_yml)
     check("XR layout constants not in real UIKit source", "JarvisXRLayoutModel" not in swift_root + swift_state and "designHeight: CGFloat = 896" not in swift_state)
     check("No fake object model claims", "Object model not installed" in swift_vision and "object_model_required" in swift_router and "Object detection ready" not in swift_router)
+    check("Product Swift does not expose Blocked label", '"Blocked"' not in swift_root + swift_state + swift_router)
+    check("Product Swift does not keep blocked state case", "case blocked" not in swift_root + swift_state + swift_planner)
+    check("Root refused responses stay ready", "setInterfaceState(.ready, hint: response.displayResponse)" in swift_root)
 
     model.open_help()
     help_text = "\n".join(model.product_surface_texts()).lower()
@@ -184,6 +187,12 @@ def main() -> int:
     for command in ["scan this", "read this", "detect objects"]:
         response = model.process(command)
         check(f"priority command remains available: {command}", response.status == "ok")
+
+    for command in ["scan this", "read this", "detect objects", "help", "settings", "diagnostics", "control mesh", "tap that", "scroll down", "go home"]:
+        normal = preview.InteractionModel()
+        response = normal.process(command)
+        surface = "\n".join(normal.product_surface_texts()).lower()
+        check(f"normal command does not say blocked: {command}", "blocked" not in surface and "blocked" not in response.display.lower())
 
     if failures:
         print("JARVIS interaction test failed:")

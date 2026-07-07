@@ -10,7 +10,7 @@ enum JarvisInteractionState: String {
     case done = "Done"
     case inspection = "Inspection"
     case quiet = "Quiet"
-    case blocked = "Blocked"
+    case attention = "Attention"
 }
 
 enum JarvisIntent: String {

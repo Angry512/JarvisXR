@@ -13,6 +13,7 @@ final class JarvisHelpViewController: UIViewController {
 
     private func buildInterface() {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.accessibilityIdentifier = "jarvis.help.scroll"
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.axis = .vertical
         stackView.spacing = 12
@@ -37,6 +38,7 @@ final class JarvisHelpViewController: UIViewController {
         header.textColor = JarvisTheme.text
         header.font = JarvisTheme.titleFont(size: 26)
         header.textAlignment = .left
+        header.accessibilityIdentifier = "jarvis.help.header"
         stackView.addArrangedSubview(header)
 
         let intro = UILabel()

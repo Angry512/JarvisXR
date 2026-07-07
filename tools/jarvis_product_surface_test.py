@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
+import json
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,11 +34,17 @@ def main() -> int:
     mesh = read(IOS_ROOT / "JarvisControlMeshPlanner.swift")
     camera = read(IOS_ROOT / "JarvisCameraViewController.swift")
     vision = read(IOS_ROOT / "JarvisVisionInterfaces.swift")
+    app_intents = read(IOS_ROOT / "JarvisAppIntents.swift")
     preview_text = read(PREVIEW)
     voice = read(IOS_ROOT / "JarvisVoiceInputService.swift")
     state = read(IOS_ROOT / "JarvisInteractionState.swift")
+    theme = read(IOS_ROOT / "JarvisTheme.swift")
     info_plist = read(IOS_ROOT / "Info.plist")
     project_yml = read(ROOT / "ios" / "JarvisXR" / "project.yml")
+    workflow_yml = read(ROOT / ".github" / "workflows" / "ios-build.yml")
+    ui_test = read(ROOT / "ios" / "JarvisXR" / "JarvisXRUITests" / "JarvisXRVisualProofTests.swift")
+    orb_imageset = IOS_ROOT / "Assets.xcassets" / "JarvisOrb.imageset"
+    app_icon_set = IOS_ROOT / "Assets.xcassets" / "AppIcon.appiconset"
 
     failures: list[str] = []
 
@@ -80,6 +87,12 @@ def main() -> int:
     check("No product-facing XR in root", "XR" not in root.replace("JarvisXRLayoutModel", "").replace("iPhone XR keyboard", ""))
     check("No WebView stack", all(term not in root + help_swift + router + camera for term in ["WebView", "WKWebView"]))
     check("No private implementation strings", all(term not in root + router + camera for term in ["UIApplication.shared.perform", "LSApplicationWorkspace", "SpringBoardServices"]))
+    check("JarvisOrb imageset exists", orb_imageset.exists())
+    check("JarvisOrb contents references real files", _imageset_has_real_files(orb_imageset))
+    check("Root orb uses bundled asset with fallback", 'UIImage(named: "JarvisOrb")' in theme and "JarvisOrbView" in root + theme)
+    check("AppIcon assets exist", app_icon_set.exists() and _imageset_has_real_files(app_icon_set))
+    check("Product source does not expose Blocked label", '"Blocked"' not in root + theme + state + preview_text)
+    check("Product Swift does not keep blocked state case", "case blocked" not in root + state + planner)
     check("Tap and long press are separate recognizers", "UITapGestureRecognizer" in root and "UILongPressGestureRecognizer" in root and "tap.require(toFail: longPress)" in root)
     check("Long press returns standby", "enterStandbyFromLongPress" in root and "voiceInput.stopListening(process: false)" in root)
     check("Manual listening stop processes transcript", "voiceInput.stopListening(process: true)" in root and "onFinalTranscript" in voice)
@@ -89,6 +102,19 @@ def main() -> int:
     check("Launch screen configured", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "LaunchScreen.storyboard" in project_yml)
     check("Markdown model notes excluded from app bundle", "Models/README.md" in project_yml)
     check("No primary Spotify music example", "Try: open Spotify" not in root + help_swift + preview_text and "play music" not in help_swift)
+    check("Required App Intents source strings exist", all(text in app_intents for text in [
+        "Start JARVIS Inspection",
+        "Open JARVIS Control Mesh",
+        "Return to JARVIS",
+        "Run JARVIS Command",
+        "Set JARVIS Quiet Mode",
+        "Set JARVIS Normal Mode",
+    ]))
+    check("UI test target configured", "JarvisXRUITests" in project_yml and "bundle.ui-testing" in project_yml)
+    check("UI screenshot test writes PNG files", "JARVIS_SCREENSHOT_DIR" in ui_test and "pngRepresentation.write" in ui_test)
+    check("Workflow captures required iOS screenshots", "Capture required iOS screenshots" in workflow_yml and "verify_visual_proof.py" in workflow_yml)
+    check("Workflow uploads screenshot artifact", "JarvisXR-ios-screenshot-proof" in workflow_yml and "if-no-files-found: error" in workflow_yml)
+    check("Workflow fails if simulator is missing", "Screenshot proof cannot be generated" in workflow_yml and "exit 1" in workflow_yml)
 
     if failures:
         print("JARVIS product surface test failed:")
@@ -130,6 +156,18 @@ def _state_contains(preview, method_name: str, expected: str) -> bool:
     model = preview.InteractionModel()
     getattr(model, method_name)()
     return expected.lower() in "\n".join(model.product_surface_texts()).lower()
+
+
+def _imageset_has_real_files(path: Path) -> bool:
+    contents = path / "Contents.json"
+    if not contents.exists():
+        return False
+    try:
+        data = json.loads(contents.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    filenames = [item.get("filename") for item in data.get("images", []) if item.get("filename")]
+    return bool(filenames) and all((path / name).exists() and (path / name).stat().st_size > 0 for name in filenames)
 
 
 if __name__ == "__main__":

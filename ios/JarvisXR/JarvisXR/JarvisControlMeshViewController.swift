@@ -16,6 +16,7 @@ final class JarvisControlMeshViewController: UIViewController {
         header.textColor = JarvisTheme.text
         header.font = JarvisTheme.titleFont(size: 22)
         header.textAlignment = .center
+        header.accessibilityIdentifier = "jarvis.mesh.header"
 
         let status = JarvisModeChipView(text: "Official iOS Layers", color: JarvisTheme.accent)
 
@@ -23,6 +24,7 @@ final class JarvisControlMeshViewController: UIViewController {
         textView.textColor = JarvisTheme.text
         textView.font = JarvisTheme.bodyFont(size: 13)
         textView.textContainerInset = UIEdgeInsets(top: 16, left: 14, bottom: 16, right: 14)
+        textView.accessibilityIdentifier = "jarvis.mesh.text"
         JarvisTheme.stylePanel(textView)
         textView.text = """
         JARVIS coordinates phone-level actions through official iOS layers. It gives the next safe route instead of pretending to control private system surfaces.

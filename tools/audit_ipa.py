@@ -4,6 +4,7 @@ import argparse
 import plistlib
 import sys
 import zipfile
+from pathlib import Path
 from pathlib import PurePosixPath
 
 
@@ -28,6 +29,8 @@ FORBIDDEN_STRINGS = [
     "Wi-Fi path available",
     "offline tools remain",
     "guided ready",
+    "Blocked",
+    "blocked",
 ]
 REQUIRED_HELP_STRINGS = [
     "Tap once from standby",
@@ -46,6 +49,22 @@ def main() -> int:
     failures: list[str] = []
     warnings: list[str] = []
     passed: list[str] = []
+    repo_orb = Path("ios") / "JarvisXR" / "JarvisXR" / "Assets.xcassets" / "JarvisOrb.imageset" / "jarvis-orb.png"
+    if repo_orb.exists() and repo_orb.stat().st_size > 0:
+        passed.append("Expected iOS orb source asset exists before build")
+    else:
+        failures.append(f"Expected iOS orb source asset is missing before build: {repo_orb}")
+
+    intents_source = Path("ios") / "JarvisXR" / "JarvisXR" / "JarvisAppIntents.swift"
+    if intents_source.exists():
+        source_text = intents_source.read_text(encoding="utf-8")
+        for text in REQUIRED_INTENT_STRINGS:
+            if text in source_text:
+                passed.append(f"App Intent source string present: {text}")
+            else:
+                failures.append(f"Expected App Intent source string missing: {text}")
+    else:
+        failures.append(f"App Intents source file missing: {intents_source}")
 
     try:
         archive = zipfile.ZipFile(args.ipa)
@@ -95,6 +114,11 @@ def main() -> int:
             passed.append("LaunchScreen resource present")
         else:
             failures.append("LaunchScreen resource not found in app bundle")
+
+        if f"{app_root}/Assets.car" in names:
+            passed.append("Assets.car present")
+        else:
+            failures.append("Assets.car missing, asset catalog may not be bundled")
 
         bundled_docs = [
             name for name in names

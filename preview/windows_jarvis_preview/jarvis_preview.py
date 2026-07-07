@@ -19,6 +19,7 @@ ROOT_DIR = APP_DIR.parents[1]
 BUNDLE_DIR = ROOT_DIR / "dist" / "jarvis_local_approval_bundle"
 DEVELOPER_REPORT = BUNDLE_DIR / "preview_developer_report.txt"
 VISUAL_REVIEW_DIR = ROOT_DIR / "dist" / "production_visual_review"
+ORB_ASSET = APP_DIR / "assets" / "jarvis_orb_reference.png"
 LONG_HOLD_SECONDS = 0.72
 
 PHONE_WIDTH = 414
@@ -124,6 +125,12 @@ class PreviewAssistantCore:
                 "Inspection tools are ready.",
                 "Vision: scan this, look at this, read this, detect objects. Control: show grid, tap, scroll down.",
             )
+        if command in {"settings", "open settings"}:
+            return PreviewResponse("ok", "Opening settings.", "Opening JARVIS settings.", "Done", "settings")
+        if command in {"diagnostics"}:
+            return PreviewResponse("ok", "Diagnostics ready.", "Diagnostics ready.", "Done", "diagnostics")
+        if command in {"control mesh", "mesh", "open mesh", "open control mesh"}:
+            return PreviewResponse("ok", "Control Mesh ready.", "Control Mesh ready.", "Done", "control_mesh")
         if command in {"jarvis ready", "ready"}:
             return PreviewResponse("ok", "JARVIS ready.", "Ready when you are.", "JARVIS ready")
         if command in {"scan this", "scan this paper", "take photo", "take a picture for analysis"}:
@@ -222,7 +229,7 @@ class InteractionModel:
         if self.state == "Standby":
             self.state = "JARVIS ready"
             self.last_response = "Ready when you are."
-        elif self.state in {"JARVIS ready", "Done", "Blocked"}:
+        elif self.state in {"JARVIS ready", "Done", "Attention"}:
             self.state = "Listening"
             self.partial_transcript = ""
             self.last_response = "Listening."
@@ -265,7 +272,7 @@ class InteractionModel:
 
     def permission_denied(self) -> None:
         self._close_sheets()
-        self.state = "Blocked"
+        self.state = "Attention"
         self.last_response = "Microphone permission is needed for in-app voice."
 
     def no_speech(self) -> None:
@@ -366,6 +373,7 @@ def run_self_test() -> int:
     product_text = "\n".join(model.product_surface_texts()).lower()
     checks: list[tuple[str, Callable[[], bool]]] = [
         ("closed input above home", lambda: closed.input_top + INPUT_HEIGHT <= PHONE_HEIGHT - SAFE_BOTTOM),
+        ("preview orb asset exists", lambda: ORB_ASSET.exists() and ORB_ASSET.stat().st_size > 0),
         ("keyboard input above keyboard", lambda: open_layout.input_top + INPUT_HEIGHT < PHONE_HEIGHT - SAFE_BOTTOM - KEYBOARD_HEIGHT),
         ("keyboard compact", lambda: open_layout.compact and open_layout.orb_size < closed.orb_size),
         ("help opens", lambda: model.help_visible and "operate jarvis" in product_text),
@@ -691,7 +699,7 @@ class JarvisPreviewApp:
             "Speaking": COLORS["green"],
             "Done": COLORS["cyan"],
             "Inspection": "#b6c0ff",
-            "Blocked": COLORS["amber"],
+            "Attention": COLORS["amber"],
         }.get(self.model.state, COLORS["amber"])
 
     def _compact(self, text: str, limit: int) -> str:

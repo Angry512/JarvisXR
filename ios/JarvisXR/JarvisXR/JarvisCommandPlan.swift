@@ -173,7 +173,7 @@ final class JarvisCommandPlanner {
             action: .none,
             display: "Try: scan this, read this, detect objects, show grid.",
             spoken: "Command not recognized.",
-            state: .blocked,
+            state: .attention,
             routeLabel: "No route",
             confidence: 0.20
         )

@@ -18,6 +18,7 @@ final class JarvisDiagnosticsViewController: UIViewController {
         textView.isEditable = false
         textView.textColor = JarvisTheme.text
         textView.font = JarvisTheme.bodyFont(size: 14)
+        textView.accessibilityIdentifier = "jarvis.diagnostics.text"
         JarvisTheme.stylePanel(textView)
         textView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textView)

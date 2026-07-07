@@ -42,6 +42,17 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.amrik.jarvisxr.tests
         INFOPLIST_FILE: JarvisXRTests/Info.plist
+  JarvisXRUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - JarvisXRUITests
+    dependencies:
+      - target: JarvisXR
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.amrik.jarvisxr.uitests
+        INFOPLIST_FILE: JarvisXRUITests/Info.plist
 schemes:
   JarvisXR:
     build:
@@ -51,3 +62,4 @@ schemes:
       config: Debug
       targets:
         - JarvisXRTests
+        - JarvisXRUITests

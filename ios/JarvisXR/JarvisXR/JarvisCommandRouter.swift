@@ -37,7 +37,7 @@ final class JarvisCommandRouter {
                 display: "iOS does not allow arbitrary floating JARVIS UI over other apps in this build. JARVIS can continue through audio, Shortcuts, Voice Control, and return-to-JARVIS."
             )
         }
-        if matches(text, ["control mesh", "control setup", "use control mesh", "open control mesh"]) {
+        if matches(text, ["control mesh", "control setup", "use control mesh", "open control mesh", "mesh", "open mesh"]) {
             return .ok("Control Mesh ready.", display: controlMeshSummary(), data: ["action": "control_mesh", "mode": "control_mesh"])
         }
         if matches(text, ["status", "system status"]) {
@@ -182,7 +182,7 @@ final class JarvisCommandRouter {
         if text == "use my voice" || text == "personal voice" {
             return .ok("Personal Voice setup is in Settings.", display: "Open Settings. JARVIS can request Personal Voice authorization on supported iOS versions, but no custom voice is trained or uploaded.", data: ["action": "settings"])
         }
-        if text == "open settings" {
+        if text == "open settings" || text == "settings" {
             return .ok("Opening settings.", display: "Opening JARVIS settings.", data: ["action": "settings"])
         }
         if text == "system check" {

@@ -9,6 +9,7 @@ the orb natively, so missing assets should not block development.
 from __future__ import annotations
 
 from pathlib import Path
+import json
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +17,9 @@ SOURCE = REPO_ROOT / "assets" / "visual_reference" / "jarvis_orb_reference_origi
 SQUARE = REPO_ROOT / "assets" / "visual_reference" / "jarvis_orb_square_crop.png"
 ICON = REPO_ROOT / "assets" / "visual_reference" / "jarvis_orb_clean_icon_reference.png"
 PREVIEW = REPO_ROOT / "preview" / "windows_jarvis_preview" / "assets" / "jarvis_orb_reference.png"
+IOS_ORB_DIR = REPO_ROOT / "ios" / "JarvisXR" / "JarvisXR" / "Assets.xcassets" / "JarvisOrb.imageset"
+IOS_ORB = IOS_ORB_DIR / "jarvis-orb.png"
+IOS_ORB_CONTENTS = IOS_ORB_DIR / "Contents.json"
 
 
 def main() -> int:
@@ -34,6 +38,7 @@ def main() -> int:
 
     SQUARE.parent.mkdir(parents=True, exist_ok=True)
     PREVIEW.parent.mkdir(parents=True, exist_ok=True)
+    IOS_ORB_DIR.mkdir(parents=True, exist_ok=True)
 
     image = Image.open(SOURCE).convert("RGB")
     width, height = image.size
@@ -54,6 +59,20 @@ def main() -> int:
     icon = crop.resize((1024, 1024), Image.Resampling.LANCZOS)
     icon = ImageEnhance.Contrast(icon).enhance(1.10)
     icon.save(ICON)
+    icon.save(IOS_ORB)
+    IOS_ORB_CONTENTS.write_text(json.dumps({
+        "images": [
+            {
+                "filename": IOS_ORB.name,
+                "idiom": "universal",
+                "scale": "1x",
+            }
+        ],
+        "info": {
+            "author": "xcode",
+            "version": 1,
+        },
+    }, indent=2) + "\n", encoding="utf-8")
 
     preview = crop.resize((512, 512), Image.Resampling.LANCZOS)
     preview = preview.filter(ImageFilter.UnsharpMask(radius=1.2, percent=110, threshold=3))
@@ -64,6 +83,7 @@ def main() -> int:
     print(f"Crop box: left={left}, top={top}, size={crop_size}")
     print(f"Square crop: {SQUARE}")
     print(f"Clean icon reference: {ICON}")
+    print(f"iOS orb asset: {IOS_ORB}")
     print(f"Windows preview asset: {PREVIEW}")
     return 0
 

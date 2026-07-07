@@ -10,7 +10,7 @@ enum JarvisDesignSystem {
         static let cyanSoft = UIColor(red: 0.18, green: 0.62, blue: 0.76, alpha: 1)
         static let inspection = UIColor(red: 0.70, green: 0.77, blue: 1.0, alpha: 1)
         static let speaking = UIColor(red: 0.40, green: 0.92, blue: 0.70, alpha: 1)
-        static let blocked = UIColor(red: 0.95, green: 0.68, blue: 0.30, alpha: 1)
+        static let attention = UIColor(red: 0.95, green: 0.68, blue: 0.30, alpha: 1)
     }
 
     enum Radius {

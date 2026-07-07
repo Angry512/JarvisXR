@@ -17,9 +17,11 @@ final class JarvisSettingsViewController: UIViewController {
         speechLabel.text = "Speech Output"
         speechLabel.textColor = JarvisTheme.text
         speechLabel.font = JarvisTheme.bodyFont(size: 16)
+        speechLabel.accessibilityIdentifier = "jarvis.settings.speechLabel"
 
         speechSwitch.isOn = JarvisSpeechService.shared.isEnabled
         speechSwitch.addTarget(self, action: #selector(speechChanged), for: .valueChanged)
+        speechSwitch.accessibilityIdentifier = "jarvis.settings.speechSwitch"
 
         let row = UIStackView(arrangedSubviews: [speechLabel, speechSwitch])
         row.axis = .horizontal
@@ -31,10 +33,12 @@ final class JarvisSettingsViewController: UIViewController {
         voiceProfileControl.setTitleTextAttributes([.foregroundColor: JarvisTheme.text], for: .normal)
         voiceProfileControl.setTitleTextAttributes([.foregroundColor: JarvisTheme.background], for: .selected)
         voiceProfileControl.addTarget(self, action: #selector(profileChanged), for: .valueChanged)
+        voiceProfileControl.accessibilityIdentifier = "jarvis.settings.voiceProfile"
 
         textView.isEditable = false
         textView.textColor = JarvisTheme.text
         textView.font = JarvisTheme.bodyFont(size: 14)
+        textView.accessibilityIdentifier = "jarvis.settings.text"
         JarvisTheme.stylePanel(textView)
         textView.text = """
         JARVIS appliance settings

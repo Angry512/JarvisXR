@@ -1,6 +1,6 @@
 JARVIS local interaction report
-timestamp: 2026-07-06T21:07:25
-passed: 60
+timestamp: 2026-07-06T22:47:29
+passed: 73
 failed: 0
 
 Passed checks:
@@ -37,6 +37,9 @@ Passed checks:
 - README markdown excluded from app resources
 - XR layout constants not in real UIKit source
 - No fake object model claims
+- Product Swift does not expose Blocked label
+- Product Swift does not keep blocked state case
+- Root refused responses stay ready
 - help opens
 - help explains in-app voice limit
 - help includes vision commands
@@ -64,3 +67,13 @@ Passed checks:
 - priority command remains available: scan this
 - priority command remains available: read this
 - priority command remains available: detect objects
+- normal command does not say blocked: scan this
+- normal command does not say blocked: read this
+- normal command does not say blocked: detect objects
+- normal command does not say blocked: help
+- normal command does not say blocked: settings
+- normal command does not say blocked: diagnostics
+- normal command does not say blocked: control mesh
+- normal command does not say blocked: tap that
+- normal command does not say blocked: scroll down
+- normal command does not say blocked: go home

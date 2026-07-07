@@ -28,6 +28,10 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private var didCheckFirstLaunch = false
     private var interfaceState: JarvisInteractionState = .standby
     private var longPressSuppressesNextTap = false
+    private var didApplyVisualProofState = false
+    private var isUITestMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("-JARVIS_UI_TESTING")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,6 +54,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         if let pending = JarvisPendingIntentStore.consumeAction() {
             handle(action: pending)
         }
+        applyVisualProofStateIfNeeded()
     }
 
     deinit {
@@ -81,11 +86,13 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         wordmarkLabel.textAlignment = .center
         wordmarkLabel.letterSpacing(5.5)
         wordmarkLabel.accessibilityLabel = "JARVIS"
+        wordmarkLabel.accessibilityIdentifier = "jarvis.wordmark"
 
         subtitleLabel.text = "Voice first inspection"
         subtitleLabel.textColor = JarvisTheme.mutedText
         subtitleLabel.font = JarvisTheme.bodyFont(size: 13)
         subtitleLabel.textAlignment = .center
+        subtitleLabel.accessibilityIdentifier = "jarvis.subtitle"
 
         orbView.translatesAutoresizingMaskIntoConstraints = false
         orbView.isUserInteractionEnabled = true
@@ -96,22 +103,26 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         orbView.addGestureRecognizer(tap)
         orbView.addGestureRecognizer(longPress)
         orbView.accessibilityHint = "Tap to wake, listen, or process. Long hold to standby."
+        orbView.accessibilityIdentifier = "jarvis.orb"
 
         stateLabel.textColor = JarvisTheme.accentHot
         stateLabel.font = JarvisTheme.titleFont(size: 22)
         stateLabel.textAlignment = .center
         stateLabel.accessibilityLabel = "JARVIS state"
+        stateLabel.accessibilityIdentifier = "jarvis.state"
 
         hintLabel.textColor = JarvisTheme.mutedText
         hintLabel.font = JarvisTheme.bodyFont(size: 14)
         hintLabel.textAlignment = .center
         hintLabel.numberOfLines = 2
+        hintLabel.accessibilityIdentifier = "jarvis.hint"
 
         transientResponseLabel.textColor = JarvisTheme.text
         transientResponseLabel.font = JarvisTheme.bodyFont(size: 15)
         transientResponseLabel.textAlignment = .center
         transientResponseLabel.numberOfLines = 3
         transientResponseLabel.alpha = 0
+        transientResponseLabel.accessibilityIdentifier = "jarvis.transientResponse"
 
         commandField.delegate = self
         commandField.attributedPlaceholder = NSAttributedString(
@@ -127,6 +138,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         commandField.borderStyle = .none
         commandField.setLeftPadding(4)
         commandField.accessibilityLabel = "Command input"
+        commandField.accessibilityIdentifier = "jarvis.commandInput"
 
         submitButton.setTitle("Send", for: .normal)
         submitButton.setTitleColor(JarvisTheme.background, for: .normal)
@@ -135,6 +147,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         submitButton.layer.cornerRadius = 14
         submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
         submitButton.accessibilityLabel = "Send command"
+        submitButton.accessibilityIdentifier = "jarvis.send"
 
         menuButton.setTitle("Mesh", for: .normal)
         menuButton.setTitleColor(JarvisTheme.mutedText, for: .normal)
@@ -146,6 +159,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         menuButton.showsMenuAsPrimaryAction = true
         menuButton.menu = utilityMenu()
         menuButton.accessibilityLabel = "Control Mesh and systems"
+        menuButton.accessibilityIdentifier = "jarvis.meshMenu"
 
         helpButton.setTitle("?", for: .normal)
         helpButton.setTitleColor(JarvisTheme.accentHot, for: .normal)
@@ -156,6 +170,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         helpButton.layer.borderColor = JarvisTheme.accent.withAlphaComponent(0.42).cgColor
         helpButton.addTarget(self, action: #selector(helpTapped), for: .touchUpInside)
         helpButton.accessibilityLabel = "JARVIS help"
+        helpButton.accessibilityIdentifier = "jarvis.help"
 
         let inputRow = UIStackView(arrangedSubviews: [commandField, submitButton])
         inputRow.axis = .horizontal
@@ -270,7 +285,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
             case .noSpeech:
                 self?.setInterfaceState(.ready, hint: "No speech heard.")
             case .unavailable(let message):
-                self?.setInterfaceState(.blocked, hint: message)
+                self?.setInterfaceState(.attention, hint: message)
                 self?.showTransient(message)
             }
         }
@@ -301,7 +316,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private func render(response: JarvisResponse) {
         showTransient(response.displayResponse)
         if response.status == .refused || response.status == .unavailable || response.status == .error {
-            setInterfaceState(.blocked, hint: response.displayResponse)
+            setInterfaceState(.ready, hint: response.displayResponse)
         }
 
         if response.data["action"] == "open_camera" || response.data["action"] == "inspect" {
@@ -364,7 +379,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         case .quiet:
             stateLabel.textColor = JarvisTheme.warning
             orbView.setState(.quiet)
-        case .blocked:
+        case .attention:
             stateLabel.textColor = JarvisTheme.warning
             orbView.setState(.error)
         }
@@ -416,12 +431,16 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
             longPressSuppressesNextTap = false
             return
         }
+        if isUITestMode {
+            handleUITestOrbTap()
+            return
+        }
         switch interfaceState {
         case .standby:
             speech.isEnabled = true
             setInterfaceState(.ready, hint: "JARVIS ready.")
             speech.speak("JARVIS ready.", notifyState: false)
-        case .ready, .done, .blocked, .quiet:
+        case .ready, .done, .attention, .quiet:
             voiceInput.startListening()
         case .listening, .heardYou:
             voiceInput.stopListening(process: true)
@@ -467,6 +486,30 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         speech.stop()
         commandField.resignFirstResponder()
         setInterfaceState(.standby, hint: "Standby.")
+    }
+
+    private func handleUITestOrbTap() {
+        switch interfaceState {
+        case .standby:
+            speech.isEnabled = true
+            setInterfaceState(.ready, hint: "JARVIS ready.")
+        case .ready, .done, .attention, .quiet, .inspection:
+            speech.stop()
+            setInterfaceState(.listening, hint: "Listening.")
+        case .listening, .heardYou:
+            let transcript = (commandField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if transcript.isEmpty {
+                setInterfaceState(.ready, hint: "No speech heard.")
+                showTransient("No speech heard.")
+            } else {
+                execute(transcript, source: "voice")
+            }
+        case .processing:
+            showTransient("Processing.")
+        case .speaking:
+            speech.stop()
+            setInterfaceState(.ready, hint: "Speech stopped.")
+        }
     }
 
     private func submitCurrentCommand() {
@@ -524,8 +567,46 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func showFirstLaunchIfNeeded() {
+        guard !isUITestMode else { return }
         guard memory.shouldShowFirstLaunchMessage() else { return }
         showTransient("JARVIS is ready.")
+    }
+
+    private func applyVisualProofStateIfNeeded() {
+        guard isUITestMode, !didApplyVisualProofState else { return }
+        didApplyVisualProofState = true
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: "-JARVIS_VISUAL_STATE"),
+              arguments.indices.contains(index + 1) else { return }
+        switch arguments[index + 1] {
+        case "ready":
+            setInterfaceState(.ready, hint: "JARVIS ready.")
+        case "listening":
+            setInterfaceState(.listening, hint: "Listening.")
+        case "no_speech":
+            setInterfaceState(.ready, hint: "No speech heard.")
+            showTransient("No speech heard.")
+        case "processing":
+            execute("status", source: "visual proof")
+        case "speaking":
+            setInterfaceState(.speaking, hint: "Speaking.")
+            showTransient("JARVIS is speaking.")
+        case "keyboard":
+            setInterfaceState(.ready, hint: "JARVIS ready.")
+            commandField.becomeFirstResponder()
+        case "inspection":
+            openCamera()
+        case "object_model_missing":
+            openCamera()
+        case "settings":
+            settingsTapped()
+        case "diagnostics":
+            diagnosticsTapped()
+        case "mesh":
+            controlMeshTapped()
+        default:
+            break
+        }
     }
 }
 

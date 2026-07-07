@@ -10,7 +10,7 @@ enum JarvisTheme {
     static let accent = JarvisDesignSystem.Color.cyanSoft
     static let accentHot = JarvisDesignSystem.Color.cyan
     static let accentDim = UIColor(red: 0.10, green: 0.32, blue: 0.38, alpha: 1.0)
-    static let warning = JarvisDesignSystem.Color.blocked
+    static let warning = JarvisDesignSystem.Color.attention
     static let success = JarvisDesignSystem.Color.speaking
     static let error = UIColor(red: 0.95, green: 0.30, blue: 0.24, alpha: 1.0)
 
@@ -135,6 +135,7 @@ enum JarvisOrbState {
 }
 
 final class JarvisOrbView: UIView {
+    private let assetLayer = CALayer()
     private let ringLayer = CAShapeLayer()
     private let secondaryRingLayer = CAShapeLayer()
     private let scanLayer = CAShapeLayer()
@@ -155,6 +156,12 @@ final class JarvisOrbView: UIView {
         layer.shadowOpacity = 0.18
         layer.shadowRadius = 30
         layer.shadowOffset = .zero
+        if let image = UIImage(named: "JarvisOrb") {
+            assetLayer.contents = image.cgImage
+            assetLayer.contentsGravity = .resizeAspectFill
+            assetLayer.opacity = 0.72
+            layer.addSublayer(assetLayer)
+        }
         [pulseLayer, deepRingLayer, tickLayer, ringLayer, secondaryRingLayer, scanLayer, innerLayer, coreGlowLayer, coreLayer].forEach { layer.addSublayer($0) }
         startIdleAnimation()
     }
@@ -168,6 +175,9 @@ final class JarvisOrbView: UIView {
         let rect = bounds.insetBy(dx: 10, dy: 10)
         let path = UIBezierPath(ovalIn: rect)
         let palette = colors(for: state)
+        assetLayer.frame = bounds.insetBy(dx: 2, dy: 2)
+        assetLayer.cornerRadius = min(assetLayer.bounds.width, assetLayer.bounds.height) / 2
+        assetLayer.masksToBounds = true
         pulseLayer.path = path.cgPath
         pulseLayer.fillColor = palette.fill.withAlphaComponent(state == .standby ? 0.12 : 0.25).cgColor
         pulseLayer.strokeColor = palette.primary.withAlphaComponent(state == .standby ? 0.08 : 0.16).cgColor
@@ -234,7 +244,7 @@ final class JarvisOrbView: UIView {
         case .standby: label = "Standby"
         case .quiet: label = "Quiet"
         case .inspection: label = "Inspecting"
-        case .error: label = "Blocked"
+        case .error: label = "Attention"
         }
         accessibilityLabel = "Jarvis status orb. \(label)."
         setNeedsLayout()
