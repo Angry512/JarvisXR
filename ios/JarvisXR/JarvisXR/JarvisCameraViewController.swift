@@ -22,11 +22,7 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         buildInterface()
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-JARVIS_UI_TESTING") || arguments.contains("--jarvis-ui-test") {
-            if visualStateArgument() == "object_model_missing" {
-                statusLabel.text = JarvisObjectDetectionModel.statusLine()
-            } else {
-                statusLabel.text = "Inspection ready. Simulator visual proof mode."
-            }
+            statusLabel.text = "Visual scan ready. \(JarvisObjectDetectionModel.statusLine())"
             return
         }
         requestCamera()
@@ -316,14 +312,6 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
 
     private func showUnavailable(_ message: String) {
         statusLabel.text = message
-    }
-
-    private func visualStateArgument() -> String? {
-        let arguments = ProcessInfo.processInfo.arguments
-        let stateKey = arguments.firstIndex(of: "--jarvis-state") ?? arguments.firstIndex(of: "-JARVIS_VISUAL_STATE")
-        guard let index = stateKey,
-              arguments.indices.contains(index + 1) else { return nil }
-        return arguments[index + 1]
     }
 
     @objc private func doneTapped() {

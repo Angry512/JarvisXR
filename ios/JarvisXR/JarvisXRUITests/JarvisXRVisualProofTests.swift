@@ -56,27 +56,27 @@ final class JarvisXRVisualProofTests: XCTestCase {
         saveScreenshot("help")
         returnToHome()
 
-        submitCommand("control mesh")
+        openMenuItem("Control Mesh")
         waitFor(app.staticTexts["jarvis.mesh.header"], named: "Control Mesh header")
         saveScreenshot("mesh")
         returnToHome()
 
-        submitCommand("inspect mode")
+        openMenuItem("Inspection")
         waitFor(app.staticTexts["jarvis.inspection.status"], named: "Inspection status")
         saveScreenshot("inspection")
         returnToHome()
 
-        submitCommand("detect objects")
+        openMenuItem("Inspection")
         waitForInspectionStatusContaining("Visual scan ready")
         saveScreenshot("object-model-missing")
         returnToHome()
 
-        submitCommand("settings")
+        openMenuItem("Settings")
         waitFor(app.switches["jarvis.settings.speechSwitch"], named: "Settings speech switch")
         saveScreenshot("settings")
         returnToHome()
 
-        submitCommand("diagnostics")
+        openMenuItem("Diagnostics")
         waitFor(app.textViews["jarvis.diagnostics.text"], named: "Diagnostics text")
         saveScreenshot("diagnostics")
         returnToHome()
@@ -100,12 +100,21 @@ final class JarvisXRVisualProofTests: XCTestCase {
     private func submitCommand(_ command: String) {
         waitFor(app.textFields["jarvis.commandInput"], named: "command input")
         let field = app.textFields["jarvis.commandInput"]
-        field.tap()
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         if let value = field.value as? String, !value.isEmpty, value != "Command JARVIS" {
             field.clearText()
         }
         field.typeText(command)
         app.buttons["jarvis.send"].tap()
+    }
+
+    private func openMenuItem(_ title: String) {
+        let menuButton = app.buttons["jarvis.meshMenu"]
+        waitFor(menuButton, named: "Mesh menu", timeout: 8)
+        menuButton.tap()
+        let item = app.buttons[title]
+        waitFor(item, named: "\(title) menu item", timeout: 8)
+        item.tap()
     }
 
     private func returnToHome() {
