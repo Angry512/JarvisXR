@@ -62,7 +62,7 @@ final class JarvisCommandPlanner {
             )
         }
 
-        if matches(text, ["scan this", "scan this paper", "look at this", "what am i looking at", "what am i pointing at", "inspect this", "analyze this", "open camera", "take photo"]) {
+        if matches(text, ["scan this", "scan this paper", "inspect this", "analyze this", "open camera", "take photo"]) {
             return plan(
                 text,
                 intent: "vision inspection",
@@ -92,7 +92,7 @@ final class JarvisCommandPlanner {
             )
         }
 
-        if matches(text, ["detect objects", "identify this", "identify this object", "what object is this", "find objects"]) {
+        if matches(text, ["detect objects", "identify this", "identify this object", "what object is this", "find objects", "look at this", "what am i looking at", "what am i pointing at"]) {
             return plan(
                 text,
                 intent: "visual classification",
