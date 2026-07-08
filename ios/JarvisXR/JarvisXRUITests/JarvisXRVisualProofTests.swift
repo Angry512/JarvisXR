@@ -31,53 +31,56 @@ final class JarvisXRVisualProofTests: XCTestCase {
         waitFor(app.staticTexts["jarvis.wordmark"], named: "JARVIS wordmark")
         saveScreenshot("standby")
 
-        launch(state: "ready")
+        app.otherElements["jarvis.orb"].tap()
         waitForState("Ready")
         saveScreenshot("ready")
 
-        launch(state: "listening")
+        app.otherElements["jarvis.orb"].tap()
         waitForState("Listening")
         saveScreenshot("listening")
 
-        launch(state: "no_speech")
+        app.otherElements["jarvis.orb"].tap()
         waitForHintContaining("No speech heard")
         saveScreenshot("no-speech")
 
-        launch(state: "processing")
+        submitCommand("status")
         waitForAnyState(["Speaking", "Done", "Ready"])
         saveScreenshot("processing")
 
-        launch(state: "standby")
+        app.otherElements["jarvis.orb"].press(forDuration: 0.85)
         waitForState("Standby")
         saveScreenshot("long-hold-standby")
 
-        launch()
-        waitForOrb()
         app.buttons["jarvis.help"].tap()
         waitFor(app.staticTexts["jarvis.help.header"], named: "Help header")
         saveScreenshot("help")
+        returnToHome()
 
-        launch(state: "mesh")
+        submitCommand("control mesh")
         waitFor(app.staticTexts["jarvis.mesh.header"], named: "Control Mesh header")
         saveScreenshot("mesh")
+        returnToHome()
 
-        launch(state: "inspection")
+        submitCommand("inspect mode")
         waitFor(app.staticTexts["jarvis.inspection.status"], named: "Inspection status")
         saveScreenshot("inspection")
+        returnToHome()
 
-        launch(state: "object_model_missing")
+        submitCommand("detect objects")
         waitForInspectionStatusContaining("Visual scan ready")
         saveScreenshot("object-model-missing")
+        returnToHome()
 
-        launch(state: "settings")
+        submitCommand("settings")
         waitFor(app.switches["jarvis.settings.speechSwitch"], named: "Settings speech switch")
         saveScreenshot("settings")
+        returnToHome()
 
-        launch(state: "diagnostics")
+        submitCommand("diagnostics")
         waitFor(app.textViews["jarvis.diagnostics.text"], named: "Diagnostics text")
         saveScreenshot("diagnostics")
+        returnToHome()
 
-        launch(state: "keyboard")
         waitForOrb()
         app.textFields["jarvis.commandInput"].tap()
         waitFor(app.buttons["jarvis.help"], named: "Help button")
@@ -92,6 +95,25 @@ final class JarvisXRVisualProofTests: XCTestCase {
             app.launchArguments += ["--jarvis-state", state]
         }
         app.launch()
+    }
+
+    private func submitCommand(_ command: String) {
+        waitFor(app.textFields["jarvis.commandInput"], named: "command input")
+        let field = app.textFields["jarvis.commandInput"]
+        field.tap()
+        if let value = field.value as? String, !value.isEmpty, value != "Command JARVIS" {
+            field.clearText()
+        }
+        field.typeText(command)
+        app.buttons["jarvis.send"].tap()
+    }
+
+    private func returnToHome() {
+        let backButton = app.navigationBars.buttons.element(boundBy: 0)
+        if backButton.exists {
+            backButton.tap()
+        }
+        waitForOrb()
     }
 
     private func waitForOrb() {
@@ -227,6 +249,16 @@ final class JarvisXRVisualProofTests: XCTestCase {
             print("JARVIS saved failure screenshot: \(url.path)")
         } catch {
             print("JARVIS could not write failure screenshot: \(error)")
+        }
+    }
+}
+
+private extension XCUIElement {
+    func clearText() {
+        if let value = value as? String, !value.isEmpty {
+            tap()
+            let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: value.count)
+            typeText(deleteString)
         }
     }
 }
