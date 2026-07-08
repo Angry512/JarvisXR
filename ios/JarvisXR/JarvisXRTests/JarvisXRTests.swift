@@ -194,7 +194,12 @@ final class JarvisXRTests: XCTestCase {
     func testObjectDetectionStatusIsReported() {
         let response = router.route(JarvisCommand("detect objects"))
         XCTAssertEqual(response.status, .ok)
-        XCTAssertTrue(response.displayResponse.contains("Object detection"))
+        XCTAssertEqual(response.data["action"], "inspect")
+        XCTAssertEqual(response.data["vision"], "object_model_required")
+        XCTAssertTrue(
+            response.displayResponse.contains("Object model not installed") ||
+            response.displayResponse.contains("Object detection ready")
+        )
     }
     func testProductionLayoutUsesSafeAreaAndKeyboardGuides() {
         XCTAssertNotNil(JarvisRootViewController.self)
