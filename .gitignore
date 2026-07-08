@@ -1,0 +1,11 @@
+﻿__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+*.sqlite
+*.sqlite3
+*.db
+.DS_Store
+Thumbs.db
