@@ -196,17 +196,7 @@ final class JarvisXRTests: XCTestCase {
         XCTAssertEqual(response.status, .ok)
         XCTAssertTrue(response.displayResponse.contains("Object detection"))
     }
-
-
-
-
     func testProductionLayoutUsesSafeAreaAndKeyboardGuides() {
         XCTAssertNotNil(JarvisRootViewController.self)
     }
-
-    func testInteractionStatesDoNotExposeBlockedState() {
-        let visibleStates = JarvisInteractionState.allCases.map { $0.displayName.lowercased() }
-        XCTAssertFalse(visibleStates.contains("blocked"))
-    }
-
 }

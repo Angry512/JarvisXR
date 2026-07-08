@@ -9,3 +9,9 @@
 *.db
 .DS_Store
 Thumbs.db
+*.zip
+*.xcresult/
+DerivedData/
+build/TestDerivedData/
+build/visual-proof/
+build/logs/

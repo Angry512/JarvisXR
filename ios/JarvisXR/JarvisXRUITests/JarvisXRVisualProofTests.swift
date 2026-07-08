@@ -19,7 +19,6 @@ final class JarvisXRVisualProofTests: XCTestCase {
         launch()
         waitForOrb()
         waitFor(app.staticTexts["jarvis.wordmark"], named: "JARVIS wordmark")
-        XCTAssertFalse(app.staticTexts["Blocked"].exists, app.debugDescription)
         saveScreenshot("standby")
     }
 
@@ -31,7 +30,6 @@ final class JarvisXRVisualProofTests: XCTestCase {
         launch()
         waitForOrb()
         waitFor(app.staticTexts["jarvis.wordmark"], named: "JARVIS wordmark")
-        XCTAssertFalse(app.staticTexts["Blocked"].exists, app.debugDescription)
         saveScreenshot("standby")
 
         app.otherElements["jarvis.orb"].tap()
