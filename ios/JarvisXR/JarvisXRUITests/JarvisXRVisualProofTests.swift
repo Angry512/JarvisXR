@@ -215,7 +215,7 @@ final class JarvisXRVisualProofTests: XCTestCase {
 
     private func saveFailureScreenshot() {
         let environment = ProcessInfo.processInfo.environment
-        guard let rawDirectory = environment["VISUAL_PROOF_DIR"] ?? environment["JARVIS_SCREENSHOT_DIR"],
+        guard let rawDirectory = environment["VISUAL_PROOF_DIR"] ?? environment["JARVIS_SCREENSHOT_DIR"] ?? derivedVisualProofDirectory(),
               !rawDirectory.isEmpty else {
             print("JARVIS could not write failure screenshot because VISUAL_PROOF_DIR was missing.")
             return

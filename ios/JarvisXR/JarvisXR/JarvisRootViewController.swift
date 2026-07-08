@@ -109,7 +109,6 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         stateLabel.textColor = JarvisTheme.accentHot
         stateLabel.font = JarvisTheme.titleFont(size: 22)
         stateLabel.textAlignment = .center
-        stateLabel.accessibilityLabel = "JARVIS state"
         stateLabel.accessibilityIdentifier = "jarvis.state"
 
         hintLabel.textColor = JarvisTheme.mutedText
@@ -351,6 +350,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private func setInterfaceState(_ state: JarvisInteractionState, hint: String) {
         interfaceState = state
         stateLabel.text = state.rawValue
+        stateLabel.accessibilityLabel = state.rawValue
         hintLabel.text = hint
         switch state {
         case .standby:
