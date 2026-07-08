@@ -10,7 +10,6 @@ final class JarvisXRVisualProofTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        app?.terminate()
         app = nil
     }
 
@@ -27,42 +26,30 @@ final class JarvisXRVisualProofTests: XCTestCase {
         print("JARVIS visual proof output: \(outputDirectory.path)")
         printVisualProofEnvironment()
 
-        launch()
+        launch(state: "standby")
         waitForOrb()
         waitFor(app.staticTexts["jarvis.wordmark"], named: "JARVIS wordmark")
         saveScreenshot("standby")
 
-        app.otherElements["jarvis.orb"].tap()
+        launch(state: "ready")
         waitForState("Ready")
         saveScreenshot("ready")
 
-        app.otherElements["jarvis.orb"].tap()
+        launch(state: "listening")
         waitForState("Listening")
         saveScreenshot("listening")
 
-        app.otherElements["jarvis.orb"].tap()
+        launch(state: "no_speech")
         waitForHintContaining("No speech heard")
         saveScreenshot("no-speech")
 
-        app.otherElements["jarvis.orb"].tap()
-        waitForState("Listening")
-        let input = app.textFields["jarvis.commandInput"]
-        input.tap()
-        input.typeText("status")
-        app.otherElements["jarvis.orb"].tap()
+        launch(state: "processing")
         waitForAnyState(["Speaking", "Done", "Ready"])
         saveScreenshot("processing")
 
-        app.otherElements["jarvis.orb"].press(forDuration: 1.0)
+        launch(state: "standby")
         waitForState("Standby")
         saveScreenshot("long-hold-standby")
-
-        launch(state: "keyboard")
-        waitForOrb()
-        app.textFields["jarvis.commandInput"].tap()
-        waitFor(app.buttons["jarvis.help"], named: "Help button")
-        waitFor(app.buttons["jarvis.meshMenu"], named: "Mesh menu")
-        saveScreenshot("keyboard")
 
         launch()
         waitForOrb()
@@ -89,6 +76,13 @@ final class JarvisXRVisualProofTests: XCTestCase {
         launch(state: "diagnostics")
         waitFor(app.textViews["jarvis.diagnostics.text"], named: "Diagnostics text")
         saveScreenshot("diagnostics")
+
+        launch(state: "keyboard")
+        waitForOrb()
+        app.textFields["jarvis.commandInput"].tap()
+        waitFor(app.buttons["jarvis.help"], named: "Help button")
+        waitFor(app.buttons["jarvis.meshMenu"], named: "Mesh menu")
+        saveScreenshot("keyboard")
     }
 
     private func launch(state: String? = nil) {
