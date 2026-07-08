@@ -111,10 +111,10 @@ final class JarvisXRVisualProofTests: XCTestCase {
     private func openMenuItem(_ title: String) {
         let menuButton = app.buttons["jarvis.meshMenu"]
         waitFor(menuButton, named: "Mesh menu", timeout: 8)
-        menuButton.tap()
+        menuButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let item = app.buttons[title]
         waitFor(item, named: "\(title) menu item", timeout: 8)
-        item.tap()
+        item.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     private func returnToHome() {
