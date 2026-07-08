@@ -588,6 +588,8 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         case "no_speech":
             setInterfaceState(.ready, hint: "No speech heard.")
             showTransient("No speech heard.")
+        case "long_hold_standby":
+            setInterfaceState(.standby, hint: "Standby.")
         case "processing":
             execute("status", source: "visual proof")
         case "speaking":
@@ -596,6 +598,8 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         case "keyboard":
             setInterfaceState(.ready, hint: "JARVIS ready.")
             commandField.becomeFirstResponder()
+        case "help":
+            helpTapped()
         case "inspection":
             openCamera()
         case "object_model_missing":

@@ -13,79 +13,108 @@ final class JarvisXRVisualProofTests: XCTestCase {
         app = nil
     }
 
-    func testAppLaunchesAndShowsOrb() throws {
-        _ = try visualProofDirectory()
-        launch()
+    func testProofStandby() throws {
+        try printVisualProofStart()
+        launch(state: "standby")
         waitForOrb()
         waitFor(app.staticTexts["jarvis.wordmark"], named: "JARVIS wordmark")
         saveScreenshot("standby")
     }
 
-    func testCaptureRequiredVisualProofScreens() throws {
+    func testProofReady() throws {
+        try printVisualProofStart()
+        launch(state: "ready")
+        waitForOrb()
+        waitForState("Ready")
+        saveScreenshot("ready")
+    }
+
+    func testProofListening() throws {
+        try printVisualProofStart()
+        launch(state: "listening")
+        waitForOrb()
+        waitForState("Listening")
+        saveScreenshot("listening")
+    }
+
+    func testProofNoSpeech() throws {
+        try printVisualProofStart()
+        launch(state: "no_speech")
+        waitForOrb()
+        waitForHintContaining("No speech heard")
+        saveScreenshot("no-speech")
+    }
+
+    func testProofProcessing() throws {
+        try printVisualProofStart()
+        launch(state: "processing")
+        waitForOrb()
+        waitForAnyState(["Speaking", "Done", "Ready"])
+        saveScreenshot("processing")
+    }
+
+    func testProofLongHoldStandby() throws {
+        try printVisualProofStart()
+        launch(state: "long_hold_standby")
+        waitForOrb()
+        waitForState("Standby")
+        saveScreenshot("long-hold-standby")
+    }
+
+    func testProofHelp() throws {
+        try printVisualProofStart()
+        launch(state: "help")
+        waitFor(app.staticTexts["jarvis.help.header"], named: "Help header")
+        saveScreenshot("help")
+    }
+
+    func testProofMesh() throws {
+        try printVisualProofStart()
+        launch(state: "mesh")
+        waitFor(app.staticTexts["jarvis.mesh.header"], named: "Control Mesh header")
+        saveScreenshot("mesh")
+    }
+
+    func testProofInspection() throws {
+        try printVisualProofStart()
+        launch(state: "inspection")
+        waitFor(app.staticTexts["jarvis.inspection.status"], named: "Inspection status")
+        saveScreenshot("inspection")
+    }
+
+    func testProofObjectModelMissing() throws {
+        try printVisualProofStart()
+        launch(state: "object_model_missing")
+        waitForInspectionStatusContaining("Visual scan ready")
+        saveScreenshot("object-model-missing")
+    }
+
+    func testProofSettings() throws {
+        try printVisualProofStart()
+        launch(state: "settings")
+        waitFor(app.switches["jarvis.settings.speechSwitch"], named: "Settings speech switch")
+        saveScreenshot("settings")
+    }
+
+    func testProofDiagnostics() throws {
+        try printVisualProofStart()
+        launch(state: "diagnostics")
+        waitFor(app.textViews["jarvis.diagnostics.text"], named: "Diagnostics text")
+        saveScreenshot("diagnostics")
+    }
+
+    func testProofKeyboard() throws {
+        try printVisualProofStart()
+        launch(state: "keyboard")
+        waitForOrb()
+        waitFor(app.textFields["jarvis.commandInput"], named: "command input")
+        saveScreenshot("keyboard")
+    }
+
+    private func printVisualProofStart() throws {
         let outputDirectory = try visualProofDirectory()
         print("JARVIS visual proof output: \(outputDirectory.path)")
         printVisualProofEnvironment()
-
-        launch(state: "standby")
-        waitForOrb()
-        waitFor(app.staticTexts["jarvis.wordmark"], named: "JARVIS wordmark")
-        saveScreenshot("standby")
-
-        app.otherElements["jarvis.orb"].tap()
-        waitForState("Ready")
-        saveScreenshot("ready")
-
-        app.otherElements["jarvis.orb"].tap()
-        waitForState("Listening")
-        saveScreenshot("listening")
-
-        app.otherElements["jarvis.orb"].tap()
-        waitForHintContaining("No speech heard")
-        saveScreenshot("no-speech")
-
-        submitCommand("status")
-        waitForAnyState(["Speaking", "Done", "Ready"])
-        saveScreenshot("processing")
-
-        app.otherElements["jarvis.orb"].press(forDuration: 0.85)
-        waitForState("Standby")
-        saveScreenshot("long-hold-standby")
-
-        app.buttons["jarvis.help"].tap()
-        waitFor(app.staticTexts["jarvis.help.header"], named: "Help header")
-        saveScreenshot("help")
-        returnToHome()
-
-        openMenuItem("Control Mesh")
-        waitFor(app.staticTexts["jarvis.mesh.header"], named: "Control Mesh header")
-        saveScreenshot("mesh")
-        returnToHome()
-
-        openMenuItem("Inspection")
-        waitFor(app.staticTexts["jarvis.inspection.status"], named: "Inspection status")
-        saveScreenshot("inspection")
-        returnToHome()
-
-        openMenuItem("Inspection")
-        waitForInspectionStatusContaining("Visual scan ready")
-        saveScreenshot("object-model-missing")
-        returnToHome()
-
-        openMenuItem("Settings")
-        waitFor(app.switches["jarvis.settings.speechSwitch"], named: "Settings speech switch")
-        saveScreenshot("settings")
-        returnToHome()
-
-        openMenuItem("Diagnostics")
-        waitFor(app.textViews["jarvis.diagnostics.text"], named: "Diagnostics text")
-        saveScreenshot("diagnostics")
-        returnToHome()
-
-        waitForOrb()
-        app.textFields["jarvis.commandInput"].tap()
-        waitFor(app.buttons["jarvis.help"], named: "Help button")
-        waitFor(app.buttons["jarvis.meshMenu"], named: "Mesh menu")
-        saveScreenshot("keyboard")
     }
 
     private func launch(state: String? = nil) {
@@ -95,34 +124,6 @@ final class JarvisXRVisualProofTests: XCTestCase {
             app.launchArguments += ["--jarvis-state", state]
         }
         app.launch()
-    }
-
-    private func submitCommand(_ command: String) {
-        waitFor(app.textFields["jarvis.commandInput"], named: "command input")
-        let field = app.textFields["jarvis.commandInput"]
-        field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        if let value = field.value as? String, !value.isEmpty, value != "Command JARVIS" {
-            field.clearText()
-        }
-        field.typeText(command)
-        app.buttons["jarvis.send"].tap()
-    }
-
-    private func openMenuItem(_ title: String) {
-        let menuButton = app.buttons["jarvis.meshMenu"]
-        waitFor(menuButton, named: "Mesh menu", timeout: 8)
-        menuButton.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-        let item = app.buttons[title]
-        waitFor(item, named: "\(title) menu item", timeout: 8)
-        item.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-    }
-
-    private func returnToHome() {
-        let backButton = app.navigationBars.buttons.element(boundBy: 0)
-        if backButton.exists {
-            backButton.tap()
-        }
-        waitForOrb()
     }
 
     private func waitForOrb() {

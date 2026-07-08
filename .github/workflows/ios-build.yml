@@ -148,7 +148,7 @@ jobs:
             -resultBundlePath build/logs/JarvisXRVisualProof.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            -only-testing:JarvisXRUITests/JarvisXRVisualProofTests/testCaptureRequiredVisualProofScreens \
+            -only-testing:JarvisXRUITests/JarvisXRVisualProofTests \
             test | tee -a build/logs/xcodebuild-visual-proof.log
           python3 ../../tools/verify_visual_proof.py "$VISUAL_PROOF_DIR" | tee -a build/logs/xcodebuild-visual-proof.log
           ls -lh "$VISUAL_PROOF_DIR" | tee -a build/logs/xcodebuild-visual-proof.log
