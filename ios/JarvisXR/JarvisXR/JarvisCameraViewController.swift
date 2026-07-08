@@ -23,7 +23,7 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-JARVIS_UI_TESTING") || arguments.contains("--jarvis-ui-test") {
             if visualStateArgument() == "object_model_missing" {
-                statusLabel.text = "Object model not installed. Text and code scanning are active."
+                statusLabel.text = JarvisObjectDetectionModel.statusLine()
             } else {
                 statusLabel.text = "Inspection ready. Simulator visual proof mode."
             }
@@ -59,7 +59,7 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         torchButton.addTarget(self, action: #selector(torchTapped), for: .touchUpInside)
 
         let hooksLabel = UILabel()
-        hooksLabel.text = "Text and code scanning run after capture. \(JarvisObjectDetectionModel.statusLine())"
+        hooksLabel.text = "Text, code, and image classification run after capture. \(JarvisObjectDetectionModel.statusLine())"
         hooksLabel.textColor = JarvisTheme.mutedText
         hooksLabel.font = JarvisTheme.bodyFont(size: 12)
         hooksLabel.numberOfLines = 0
@@ -215,12 +215,13 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
             statusLabel.text = "Capture complete. Image metadata unavailable."
             return
         }
-        statusLabel.text = "Reading text. Scanning codes. Checking object model."
+        statusLabel.text = "Reading text. Scanning codes. Classifying image."
         let textRequest = VNRecognizeTextRequest()
         textRequest.recognitionLevel = .fast
         textRequest.usesLanguageCorrection = true
 
         let barcodeRequest = VNDetectBarcodesRequest()
+        let classificationRequest = VNClassifyImageRequest()
         let objectModel = JarvisObjectDetectionModel.makeVisionModel()
         let objectRequest = objectModel.map { model in
             VNCoreMLRequest(model: model)
@@ -230,8 +231,9 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
             var lines: [String] = []
             var codes: [String] = []
             var objects: [String] = []
+            var classifications: [String] = []
             do {
-                var requests: [VNRequest] = [textRequest, barcodeRequest]
+                var requests: [VNRequest] = [textRequest, barcodeRequest, classificationRequest]
                 if let objectRequest {
                     requests.append(objectRequest)
                 }
@@ -244,6 +246,10 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
                     .compactMap { $0.payloadStringValue }
                     .prefix(3)
                     .map { $0 }
+                classifications = (classificationRequest.results ?? [])
+                    .filter { $0.confidence >= 0.18 }
+                    .prefix(4)
+                    .map { "\($0.identifier) \(Int($0.confidence * 100))%" }
                 if let classifications = objectRequest?.results as? [VNClassificationObservation] {
                     objects = classifications
                         .filter { $0.confidence >= 0.20 }
@@ -268,8 +274,8 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
                 if bytes > 0 {
                     summary += ". \(bytes) bytes."
                 }
-                if lines.isEmpty && codes.isEmpty && objects.isEmpty {
-                    summary += "\nResults ready. No text or code found. \(JarvisObjectDetectionModel.statusLine())"
+                if lines.isEmpty && codes.isEmpty && objects.isEmpty && classifications.isEmpty {
+                    summary += "\nResults ready. No readable text, codes, or image labels found."
                 } else {
                     summary += "\nResults ready."
                     if !lines.isEmpty {
@@ -280,17 +286,20 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
                     }
                     if !objects.isEmpty {
                         summary += "\nObjects: " + objects.joined(separator: " | ")
-                    } else if !JarvisObjectDetectionModel.isReady() {
-                        summary += "\nObject model not installed. Text and code scanning are active."
+                    }
+                    if !classifications.isEmpty {
+                        summary += "\nImage: " + classifications.joined(separator: " | ")
+                    } else if objects.isEmpty {
+                        summary += "\n" + JarvisObjectDetectionModel.statusLine()
                     }
                 }
                 self.statusLabel.text = summary
-                self.speakInspectionSummary(textLines: lines, codes: codes, objects: objects)
+                self.speakInspectionSummary(textLines: lines, codes: codes, objects: objects, classifications: classifications)
             }
         }
     }
 
-    private func speakInspectionSummary(textLines: [String], codes: [String], objects: [String]) {
+    private func speakInspectionSummary(textLines: [String], codes: [String], objects: [String], classifications: [String]) {
         guard JarvisSpeechService.shared.isEnabled else { return }
         if let firstLine = textLines.first {
             JarvisSpeechService.shared.speak("Text found. \(firstLine)")
@@ -298,8 +307,10 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
             JarvisSpeechService.shared.speak("Code found. \(firstCode)")
         } else if let firstObject = objects.first {
             JarvisSpeechService.shared.speak("Object signal. \(firstObject)")
+        } else if let firstClassification = classifications.first {
+            JarvisSpeechService.shared.speak("Visual scan complete. I see \(firstClassification).")
         } else {
-            JarvisSpeechService.shared.speak("Scan complete. No text or code found.")
+            JarvisSpeechService.shared.speak("Scan complete. I did not find readable text, codes, or image labels.")
         }
     }
 

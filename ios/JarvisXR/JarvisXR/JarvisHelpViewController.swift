@@ -66,8 +66,8 @@ final class JarvisHelpViewController: UIViewController {
         ])
         addSection("Vision", [
             "Try: scan this, read this, look at this, detect objects.",
-            "OCR and barcode scan run after capture when available.",
-            "Object detection needs a bundled Core ML model."
+            "OCR, barcode scan, and image classification run after capture.",
+            "A custom Core ML detector can be bundled later for stronger object labels."
         ])
         addSection("Control Mesh", [
             "Use Mesh for phone-level actions.",

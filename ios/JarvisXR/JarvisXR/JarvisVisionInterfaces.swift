@@ -32,7 +32,7 @@ final class JarvisVisionPlaceholderAnalyzer: JarvisVisionAnalyzing {
         JarvisVisionResult(
             capability: request.capability,
             status: "future",
-            summary: "Vision and Core ML hooks are prepared, but no local model is active in this build.",
+            summary: "Vision scan routes are active for OCR, codes, and built-in image classification. A custom Core ML object detector can be added later.",
             observations: []
         )
     }
@@ -62,7 +62,13 @@ enum JarvisObjectDetectionModel {
     static func statusLine() -> String {
         isReady()
             ? "Object detection ready with bundled Core ML model."
-            : "Object model not installed. Text and code scanning are active."
+            : "Visual scan ready: text, codes, and image classification are active."
+    }
+
+    static func diagnosticLine() -> String {
+        isReady()
+            ? "Bundled Core ML object detector: available."
+            : "Bundled Core ML object detector: not bundled. Built-in Vision classification fallback: active."
     }
 
     static func makeVisionModel() -> VNCoreMLModel? {

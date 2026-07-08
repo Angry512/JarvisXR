@@ -66,7 +66,7 @@ final class JarvisXRVisualProofTests: XCTestCase {
         saveScreenshot("inspection")
 
         launch(state: "object_model_missing")
-        waitForInspectionStatusContaining("Object model not installed")
+        waitForInspectionStatusContaining("Visual scan ready")
         saveScreenshot("object-model-missing")
 
         launch(state: "settings")

@@ -84,7 +84,7 @@ def main() -> int:
     detect_model.orb_tap()
     detect_model.simulate_partial("detect objects")
     detect_response_from_voice = detect_model.endpoint()
-    check("tap_from_listening_with_detect_routes_inspection_model_gated", detect_response_from_voice.action == "object_model_missing" and detect_model.state == "Inspection")
+    check("tap_from_listening_with_detect_routes_visual_classification", detect_response_from_voice.action == "visual_classification" and detect_model.state == "Inspection")
 
     empty_model = preview.InteractionModel()
     empty_model.orb_tap()
@@ -118,6 +118,28 @@ def main() -> int:
         normal_tap_states.append(normal_tap.orb_tap())
     check("normal_tap_never_enters_standby", "Standby" not in normal_tap_states)
 
+    repeat_cycle = preview.InteractionModel()
+    cycle_ok = True
+    for command in ["status", "scan this", "read this"]:
+        cycle_ok = cycle_ok and repeat_cycle.orb_tap() == "JARVIS ready"
+        cycle_ok = cycle_ok and repeat_cycle.orb_tap() == "Listening"
+        repeat_cycle.simulate_partial(command)
+        response = repeat_cycle.orb_tap()
+        cycle_ok = cycle_ok and repeat_cycle.state in {"Done", "Inspection", "JARVIS ready"} and response != "Standby"
+        repeat_cycle.long_press()
+    check("three repeated tap cycles stay usable", cycle_ok)
+
+    wake_after_standby = preview.InteractionModel()
+    wake_after_standby.orb_tap()
+    wake_after_standby.long_press()
+    check("long hold standby then tap wakes again", wake_after_standby.orb_tap() == "JARVIS ready")
+
+    no_speech_recovery = preview.InteractionModel()
+    no_speech_recovery.orb_tap()
+    no_speech_recovery.orb_tap()
+    no_speech_recovery.orb_tap()
+    check("tap after no speech can listen again", no_speech_recovery.state == "JARVIS ready" and no_speech_recovery.orb_tap() == "Listening")
+
     typed_response = preview.InteractionModel().process("scan this")
     check("typed_command_still_routes", typed_response.action == "inspect" and typed_response.state == "Inspection")
 
@@ -131,7 +153,8 @@ def main() -> int:
     check("LaunchScreen configured in Info.plist/project.yml", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "LaunchScreen.storyboard" in project_yml)
     check("README markdown excluded from app resources", "Models/README.md" in project_yml)
     check("XR layout constants not in real UIKit source", "JarvisXRLayoutModel" not in swift_root + swift_state and "designHeight: CGFloat = 896" not in swift_state)
-    check("No fake object model claims", "Object model not installed" in swift_vision and "object_model_required" in swift_router and "Object detection ready" not in swift_router)
+    check("No fake object model claims", "VNClassifyImageRequest" in (IOS_ROOT / "JarvisCameraViewController.swift").read_text(encoding="utf-8") and "visual_classification" in swift_router and "Object model not installed" not in swift_router + swift_vision)
+    check("Inspection speech uses scan results", "speakInspectionSummary" in (IOS_ROOT / "JarvisCameraViewController.swift").read_text(encoding="utf-8") and "JarvisSpeechService.shared.isEnabled" in (IOS_ROOT / "JarvisCameraViewController.swift").read_text(encoding="utf-8"))
     check("Product Swift does not expose Blocked label", '"Blocked"' not in swift_root + swift_state + swift_router)
     check("Product Swift does not keep blocked state case", "case blocked" not in swift_root + swift_state + swift_planner)
     check("Root refused responses stay ready", "setInterfaceState(.ready, hint: response.displayResponse)" in swift_root)
@@ -178,7 +201,7 @@ def main() -> int:
 
     detect_response = model.process("detect objects")
     check("detect objects routes inspection", detect_response.state == "Inspection")
-    check("detect objects reports model missing", "model" in detect_response.display.lower())
+    check("detect objects uses visual classification", "classification" in detect_response.display.lower())
 
     check("go home routes to Control Mesh", model.process("go home").action == "control_mesh")
     check("tap routes to Voice Control grid", "show grid" in model.process("tap that").display.lower())
@@ -193,6 +216,12 @@ def main() -> int:
         response = normal.process(command)
         surface = "\n".join(normal.product_surface_texts()).lower()
         check(f"normal command does not say blocked: {command}", "blocked" not in surface and "blocked" not in response.display.lower())
+
+    swift_settings = (IOS_ROOT / "JarvisSettingsViewController.swift").read_text(encoding="utf-8")
+    swift_speech = (IOS_ROOT / "JarvisSpeechService.swift").read_text(encoding="utf-8")
+    check("settings speech switch persists and gates speech", "speechSwitch.addTarget" in swift_settings and "JarvisSpeechService.shared.isEnabled = speechSwitch.isOn" in swift_settings and "guard isEnabled else { return }" in swift_speech)
+    check("voice profiles persist and affect utterance", "profileKey" in swift_speech and "utterance.rate = speechRate(for:" in swift_speech and "utterance.pitchMultiplier = pitch(for:" in swift_speech and "utterance.volume = volume(for:" in swift_speech)
+    check("settings buttons have real actions", all(term in swift_settings for term in ["clearNotesButton.addTarget", "clearHistoryButton.addTarget", "voiceTestButton.addTarget", "profilePreviewButton.addTarget", "personalVoiceButton.addTarget", "aboutButton.addTarget"]))
 
     if failures:
         print("JARVIS interaction test failed:")

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import plistlib
+import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 from pathlib import PurePosixPath
@@ -50,10 +53,20 @@ def main() -> int:
     warnings: list[str] = []
     passed: list[str] = []
     repo_orb = Path("ios") / "JarvisXR" / "JarvisXR" / "Assets.xcassets" / "JarvisOrb.imageset" / "jarvis-orb.png"
+    repo_app_icon = Path("ios") / "JarvisXR" / "JarvisXR" / "Assets.xcassets" / "AppIcon.appiconset"
+    repo_launch = Path("ios") / "JarvisXR" / "JarvisXR" / "LaunchScreen.storyboard"
     if repo_orb.exists() and repo_orb.stat().st_size > 0:
         passed.append("Expected iOS orb source asset exists before build")
     else:
         failures.append(f"Expected iOS orb source asset is missing before build: {repo_orb}")
+    if source_asset_set_has_files(repo_app_icon):
+        passed.append("Expected AppIcon source asset set has real PNG files")
+    else:
+        failures.append(f"Expected AppIcon source asset set is missing or empty: {repo_app_icon}")
+    if repo_launch.exists() and repo_launch.stat().st_size > 0:
+        passed.append("LaunchScreen storyboard source exists before build")
+    else:
+        failures.append(f"LaunchScreen storyboard source missing before build: {repo_launch}")
 
     intents_source = Path("ios") / "JarvisXR" / "JarvisXR" / "JarvisAppIntents.swift"
     if intents_source.exists():
@@ -115,8 +128,26 @@ def main() -> int:
         else:
             failures.append("LaunchScreen resource not found in app bundle")
 
-        if f"{app_root}/Assets.car" in names:
+        assets_car_name = f"{app_root}/Assets.car"
+        if assets_car_name in names:
             passed.append("Assets.car present")
+            with tempfile.TemporaryDirectory() as tmp:
+                assets_path = Path(tmp) / "Assets.car"
+                assets_path.write_bytes(archive.read(assets_car_name))
+                asset_names = asset_catalog_names(assets_path, warnings)
+                if asset_names:
+                    if "JarvisOrb" in asset_names:
+                        passed.append("JarvisOrb present in compiled Assets.car")
+                    else:
+                        failures.append("JarvisOrb missing from compiled Assets.car")
+                    if any(name == "AppIcon" or name.startswith("AppIcon") or "AppIcon" in name for name in asset_names):
+                        passed.append("AppIcon present in compiled Assets.car")
+                    else:
+                        failures.append("AppIcon missing from compiled Assets.car")
+                elif sys.platform == "darwin":
+                    failures.append("assetutil could not prove JarvisOrb and AppIcon in Assets.car")
+                else:
+                    warnings.append("assetutil unavailable, using source asset catalog evidence for AppIcon and JarvisOrb")
         else:
             failures.append("Assets.car missing, asset catalog may not be bundled")
 
@@ -156,10 +187,12 @@ def main() -> int:
             failures.append("App Intents metadata or readable intent strings were not found in the app bundle")
 
         if ".mlmodelc/" not in "\n".join(names):
-            if "Object model not installed" in combined:
-                passed.append("No .mlmodelc found and object detection is model-gated")
+            vision_source = Path("ios") / "JarvisXR" / "JarvisXR" / "JarvisCameraViewController.swift"
+            vision_text = vision_source.read_text(encoding="utf-8") if vision_source.exists() else ""
+            if "VNClassifyImageRequest" in vision_text and "Visual scan ready" in vision_text + combined:
+                passed.append("No .mlmodelc found and built-in Vision classification fallback is active")
             else:
-                failures.append("No .mlmodelc found but model-gated object wording was not detected")
+                failures.append("No .mlmodelc found and built-in Vision classification fallback was not proven")
         else:
             passed.append("Compiled Core ML model resource present")
 
@@ -222,6 +255,40 @@ def read_text_payload(archive: zipfile.ZipFile, names: list[str], app_root: str)
         except Exception:
             continue
     return "\n".join(chunks)
+
+
+def source_asset_set_has_files(path: Path) -> bool:
+    contents = path / "Contents.json"
+    if not contents.exists():
+        return False
+    try:
+        data = json.loads(contents.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    filenames = [item.get("filename") for item in data.get("images", []) if item.get("filename")]
+    return bool(filenames) and all((path / name).exists() and (path / name).stat().st_size > 0 for name in filenames)
+
+
+def asset_catalog_names(assets_car: Path, warnings: list[str]) -> set[str]:
+    if sys.platform != "darwin":
+        return set()
+    try:
+        result = subprocess.run(
+            ["xcrun", "assetutil", "--info", str(assets_car)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        payload = json.loads(result.stdout)
+    except Exception as exc:
+        warnings.append(f"assetutil inspection failed: {exc}")
+        return set()
+    names: set[str] = set()
+    for item in payload:
+        name = item.get("Name") or item.get("AssetName")
+        if name:
+            names.add(str(name))
+    return names
 
 
 def has_otool() -> bool:

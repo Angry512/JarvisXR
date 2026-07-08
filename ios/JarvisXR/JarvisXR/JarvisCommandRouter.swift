@@ -82,7 +82,7 @@ final class JarvisCommandRouter {
                 return .ok("Opening inspection.", display: "Opening inspection. Text recognition runs after capture when available.", data: ["action": "inspect", "vision": "ocr"])
             }
             if matches(text, ["detect objects", "what am i looking at", "what am i pointing at", "look at this"]) {
-                return .ok("Opening inspection.", display: "Opening inspection. \(JarvisObjectDetectionModel.statusLine())", data: ["action": "inspect", "vision": "object_model_required"])
+                return .ok("Opening visual scan.", display: "Opening inspection. \(JarvisObjectDetectionModel.statusLine())", data: ["action": "inspect", "vision": "visual_classification"])
             }
             if matches(text, ["scan this", "scan this paper", "scan paper", "take photo"]) {
                 return .ok("Opening inspection.", display: "Opening inspection.", data: ["action": "inspect"])
@@ -241,9 +241,9 @@ final class JarvisCommandRouter {
 
     private func plannedResponse(for plan: JarvisCommandPlan, raw: String) -> JarvisResponse? {
         switch plan.route {
+        case .inAppSpeech where plan.action == .speech:
+            return nil
         case .inAppVision:
-            return .ok(plan.spokenText, display: plan.displayText, data: plan.data)
-        case .unsupportedModelMissing:
             return .ok(plan.spokenText, display: plan.displayText, data: plan.data)
         case .controlMeshGuide where plan.action == .openControlMesh:
             return .ok(plan.spokenText, display: controlMeshSummary(), data: ["action": "control_mesh", "route_label": plan.routeLabel])
@@ -292,7 +292,7 @@ final class JarvisCommandRouter {
         let display = """
         Hardware advantage
         Camera: local inspection, capture, torch, focus, exposure.
-        Vision: OCR and barcode scan after capture where supported. Object detection needs a Core ML model.
+        Vision: OCR, barcode scan, and built-in image classification after capture. A custom Core ML detector can be bundled later.
         Voice: local speech output and in-app push-to-talk.
         Sensors: motion availability, battery, storage, Low Power Mode.
         Security: Guided Access and device restrictions are the current lockdown layer.
@@ -431,7 +431,7 @@ final class JarvisCommandRouter {
         @unknown default:
             display = "Camera permission: unknown."
         }
-        let modelStatus = JarvisObjectDetectionModel.statusLine()
+        let modelStatus = JarvisObjectDetectionModel.diagnosticLine()
         return .ok("Camera status ready.", display: "\(display)\n\(modelStatus)")
     }
 

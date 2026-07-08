@@ -82,7 +82,7 @@ final class JarvisAssistantCore {
             if response.data["vision"] == "ocr" {
                 return .readText
             }
-            if response.data["vision"] == "object_model_required" {
+            if response.data["vision"] == "visual_classification" {
                 return .objectDetection
             }
             return .visionInspection

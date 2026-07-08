@@ -32,6 +32,7 @@ def main() -> int:
     router = read(IOS_ROOT / "JarvisCommandRouter.swift")
     planner = read(IOS_ROOT / "JarvisCommandPlan.swift")
     mesh = read(IOS_ROOT / "JarvisControlMeshPlanner.swift")
+    mesh_view = read(IOS_ROOT / "JarvisControlMeshViewController.swift")
     camera = read(IOS_ROOT / "JarvisCameraViewController.swift")
     vision = read(IOS_ROOT / "JarvisVisionInterfaces.swift")
     app_intents = read(IOS_ROOT / "JarvisAppIntents.swift")
@@ -78,11 +79,37 @@ def main() -> int:
     check("Scan routes to inspection", preview.InteractionModel().process("scan this").state == "Inspection")
     check("Read routes to OCR", preview.InteractionModel().process("read this").action == "ocr")
     detect = preview.InteractionModel().process("detect objects")
-    check("Detect objects routes and is model gated", detect.state == "Inspection" and "model" in detect.display.lower())
+    check("Detect objects routes to visual classification", detect.state == "Inspection" and "classification" in detect.display.lower())
     check("Go home routes to Control Mesh", preview.InteractionModel().process("go home").action == "control_mesh")
     check("Tap routes to grid", "show grid" in preview.InteractionModel().process("tap that").display.lower())
     check("Return route exists", "jarvis://standby" in mesh and "return to jarvis" in mesh.lower())
-    check("Object detection is model gated", "Object model not installed" in vision and "VNCoreMLModel" in vision)
+    check("Vision fallback is real and not model-dead-ended", "VNClassifyImageRequest" in camera and "Visual scan ready" in vision and "Object model not installed" not in vision + router + camera)
+    check("Inspection speaks scan results when enabled", "speakInspectionSummary" in camera and "JarvisSpeechService.shared.isEnabled" in camera and "JarvisSpeechService.shared.speak" in camera)
+    settings = read(IOS_ROOT / "JarvisSettingsViewController.swift")
+    speech = read(IOS_ROOT / "JarvisSpeechService.swift")
+    check("Settings buttons route to real actions", all(term in settings for term in [
+        "clearNotesButton.addTarget",
+        "clearHistoryButton.addTarget",
+        "voiceTestButton.addTarget",
+        "profilePreviewButton.addTarget",
+        "personalVoiceButton.addTarget",
+        "aboutButton.addTarget",
+    ]))
+    check("Control Mesh buttons route through real deep links", all(term in mesh_view for term in [
+        "inspectButton.addTarget",
+        "quietButton.addTarget",
+        "voiceButton.addTarget",
+        "JarvisDeepLinkRouter.post(.inspect)",
+        "JarvisDeepLinkRouter.post(.command(\"quiet mode\"))",
+        "JarvisDeepLinkRouter.post(.command(\"voice test\"))",
+    ]))
+    check("Voice profiles persist and affect speech parameters", all(term in speech for term in [
+        "profileKey",
+        "UserDefaults.standard.set(newValue.rawValue",
+        "utterance.rate = speechRate(for:",
+        "utterance.pitchMultiplier = pitch(for:",
+        "utterance.volume = volume(for:",
+    ]))
     check("No Recent Activity in product sources", "Recent Activity" not in root)
     check("No response panel label", "JARVIS RESPONSE" not in root)
     check("No debug chips", all(term not in root for term in ["Wi-Fi path available", "offline tools remain", "guided ready"]))

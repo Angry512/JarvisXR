@@ -55,7 +55,7 @@ final class JarvisDiagnosticsViewController: UIViewController {
         let gyro = motionManager.isGyroAvailable ? "available" : "unavailable"
         let magnetometer = motionManager.isMagnetometerAvailable ? "available" : "unavailable"
         let orientation = UIDevice.current.orientation.isValidInterfaceOrientation ? "\(UIDevice.current.orientation)" : "portrait app surface active"
-        let coreML = "Vision OCR and barcode scan run after capture. Object detection requires a Core ML model."
+        let coreML = "Vision OCR, barcode scan, and image classification run after capture. \(JarvisObjectDetectionModel.diagnosticLine())"
         let controlMesh = "active. URL scheme, Voice Control setup, Shortcuts setup, and App Intents source are present."
         let camera: String
         switch AVCaptureDevice.authorizationStatus(for: .video) {

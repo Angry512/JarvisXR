@@ -48,7 +48,7 @@ HELP_SECTIONS = (
     ("Start", ("Tap once from standby to wake JARVIS.", "Tap again to listen.", "Tap while listening to process the command.", "Long hold the orb to return to standby.")),
     ("Voice", ("JARVIS listens while this app is open.", "A short pause ends the command.", "Background wake word is not available in this build.")),
     ("Typing", ("Use the command bar when voice is not ideal.", "Return or Send routes the command.")),
-    ("Vision", ("Try: scan this, read this, look at this, detect objects.", "OCR and barcode scan run after capture when available.", "Object detection needs a bundled Core ML model.")),
+    ("Vision", ("Try: scan this, read this, look at this, detect objects.", "OCR, barcode scan, and image classification run after capture.", "A custom Core ML detector can be bundled later.")),
     ("Control Mesh", ("Use Mesh for phone-level actions.", "Voice Control handles Show Grid, Tap, Scroll, Go Home, and screenshots.", "Shortcuts and jarvis:// links return actions back to JARVIS.")),
     ("States", ("Ready means JARVIS is awake.", "Listening means it is hearing you.", "Processing means it is routing the command.", "Speaking means it is responding.")),
     ("Limits", ("No hidden phone takeover without jailbreak.", "Phone-level actions use Control Mesh, Voice Control, or Shortcuts.", "Full phone takeover needs system access not available in this build.")),
@@ -148,10 +148,10 @@ class PreviewAssistantCore:
         if command in {"detect objects", "identify this object"}:
             return PreviewResponse(
                 "ok",
-                "Object model not installed.",
-                "Object model not installed. Text and code scanning are active.",
+                "Opening visual scan.",
+                "Visual scan ready: text, codes, and image classification are active.",
                 "Inspection",
-                "object_model_missing",
+                "visual_classification",
             )
         if command in {"flashlight on", "light on"}:
             return PreviewResponse("ok", "Opening inspection.", "Open inspection, then enable Light.", "Inspection", "inspect")
@@ -384,7 +384,7 @@ def run_self_test() -> int:
         ("silence endpoint processing", lambda: _endpoint_scan(model)),
         ("scan inspection", lambda: model.process("scan this").state == "Inspection"),
         ("read maps ocr", lambda: model.process("read this").action == "ocr"),
-        ("detect model missing", lambda: "model" in model.process("detect objects").display.lower()),
+        ("detect visual classification", lambda: "classification" in model.process("detect objects").display.lower()),
         ("go home uses mesh", lambda: model.process("go home").action == "control_mesh"),
         ("tap uses mesh", lambda: model.process("tap").action == "control_mesh"),
     ]

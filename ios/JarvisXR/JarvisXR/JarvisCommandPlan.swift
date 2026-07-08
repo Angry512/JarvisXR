@@ -11,7 +11,6 @@ enum JarvisCapabilityRoute: String {
     case voiceControlRoute
     case controlMeshGuide
     case unsupportedRequiresSystemAccess
-    case unsupportedModelMissing
     case unknown
 }
 
@@ -96,15 +95,15 @@ final class JarvisCommandPlanner {
         if matches(text, ["detect objects", "identify this", "identify this object", "what object is this", "find objects"]) {
             return plan(
                 text,
-                intent: "object detection",
-                route: JarvisObjectDetectionModel.isReady() ? .inAppVision : .unsupportedModelMissing,
+                intent: "visual classification",
+                route: .inAppVision,
                 action: .detectObjects,
-                display: JarvisObjectDetectionModel.isReady() ? "Opening object scan." : "Object model not installed. Text and code scanning are active.",
-                spoken: JarvisObjectDetectionModel.isReady() ? "Opening object scan." : "Object model not installed. Text and code scanning are active.",
+                display: "Opening visual scan. \(JarvisObjectDetectionModel.statusLine())",
+                spoken: "Opening visual scan.",
                 state: .inspection,
-                routeLabel: JarvisObjectDetectionModel.isReady() ? "Core ML Vision" : "Model gated Vision",
+                routeLabel: JarvisObjectDetectionModel.isReady() ? "Core ML Vision" : "Built-in Vision classification",
                 confidence: 0.94,
-                data: ["action": "inspect", "vision": "object_model_required", "planner_route": "object_detection"]
+                data: ["action": "inspect", "vision": "visual_classification", "planner_route": "object_detection"]
             )
         }
 

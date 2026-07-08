@@ -71,11 +71,20 @@ final class JarvisXRTests: XCTestCase {
         let response = router.route(JarvisCommand("speech off"))
         XCTAssertEqual(response.status, .ok)
         XCTAssertFalse(response.shouldSpeak)
+        XCTAssertFalse(JarvisSpeechService.shared.isEnabled)
     }
 
     func testSpeechOnCommandReturnsOk() {
         let response = router.route(JarvisCommand("speech on"))
         XCTAssertEqual(response.status, .ok)
+        XCTAssertTrue(JarvisSpeechService.shared.isEnabled)
+    }
+
+    func testQuietAndNormalModePersistSpeechFlag() {
+        _ = router.route(JarvisCommand("quiet mode"))
+        XCTAssertFalse(JarvisSpeechService.shared.isEnabled)
+        _ = router.route(JarvisCommand("normal mode"))
+        XCTAssertTrue(JarvisSpeechService.shared.isEnabled)
     }
 
     func testBatteryCommandReturnsResponse() {
@@ -195,11 +204,28 @@ final class JarvisXRTests: XCTestCase {
         let response = router.route(JarvisCommand("detect objects"))
         XCTAssertEqual(response.status, .ok)
         XCTAssertEqual(response.data["action"], "inspect")
-        XCTAssertEqual(response.data["vision"], "object_model_required")
-        XCTAssertTrue(
-            response.displayResponse.contains("Object model not installed") ||
-            response.displayResponse.contains("Object detection ready")
-        )
+        XCTAssertEqual(response.data["vision"], "visual_classification")
+        XCTAssertTrue(response.displayResponse.contains("Visual scan ready"))
+        XCTAssertFalse(response.displayResponse.contains("Object model not installed"))
+    }
+
+    func testVoiceProfilePersistsAndChangesConfiguration() {
+        let original = JarvisSpeechService.shared.profile
+        JarvisSpeechService.shared.profile = .crisp
+        XCTAssertEqual(JarvisSpeechService.shared.profile, .crisp)
+        XCTAssertGreaterThan(JarvisSpeechService.shared.speechRate, 0.50)
+        JarvisSpeechService.shared.profile = .quiet
+        XCTAssertEqual(JarvisSpeechService.shared.profile, .quiet)
+        XCTAssertLessThan(JarvisSpeechService.shared.volume, 0.70)
+        JarvisSpeechService.shared.profile = original
+    }
+
+    func testDetectObjectsDoesNotDeadEndOnMissingModel() {
+        let response = router.route(JarvisCommand("what am I pointing at"))
+        XCTAssertEqual(response.status, .ok)
+        XCTAssertEqual(response.data["action"], "inspect")
+        XCTAssertEqual(response.data["vision"], "visual_classification")
+        XCTAssertTrue(response.shouldSpeak)
     }
     func testProductionLayoutUsesSafeAreaAndKeyboardGuides() {
         XCTAssertNotNil(JarvisRootViewController.self)

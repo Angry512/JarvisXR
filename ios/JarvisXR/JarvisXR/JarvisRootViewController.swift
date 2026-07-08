@@ -320,7 +320,7 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         }
 
         if response.data["action"] == "open_camera" || response.data["action"] == "inspect" {
-            let hint = response.data["vision"] == "ocr" ? "Reading target." : response.data["vision"] == "object_model_required" ? "Checking object model." : "Opening inspection."
+            let hint = response.data["vision"] == "ocr" ? "Reading target." : response.data["vision"] == "visual_classification" ? "Opening visual scan." : "Opening inspection."
             setInterfaceState(.inspection, hint: hint)
             openCamera()
         } else if response.data["action"] == "diagnostics" {
