@@ -171,7 +171,7 @@ final class JarvisXRVisualProofTests: XCTestCase {
 
     private func visualProofDirectory() throws -> URL {
         let environment = ProcessInfo.processInfo.environment
-        let rawDirectory = environment["VISUAL_PROOF_DIR"] ?? environment["JARVIS_SCREENSHOT_DIR"]
+        let rawDirectory = environment["VISUAL_PROOF_DIR"] ?? environment["JARVIS_SCREENSHOT_DIR"] ?? derivedVisualProofDirectory()
         guard let rawDirectory, !rawDirectory.isEmpty else {
             throw NSError(
                 domain: "JarvisXRVisualProof",
@@ -182,6 +182,13 @@ final class JarvisXRVisualProofTests: XCTestCase {
         let directory = URL(fileURLWithPath: rawDirectory, isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         return directory
+    }
+
+    private func derivedVisualProofDirectory(filePath: String = #filePath) -> String? {
+        let marker = "/ios/JarvisXR/"
+        guard let range = filePath.range(of: marker) else { return nil }
+        let projectRoot = String(filePath[..<range.upperBound])
+        return projectRoot + "build/visual-proof"
     }
 
     private func printVisualProofEnvironment() {
