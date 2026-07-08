@@ -20,7 +20,8 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
         view.backgroundColor = JarvisTheme.background
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Done", style: .plain, target: self, action: #selector(doneTapped))
         buildInterface()
-        if ProcessInfo.processInfo.arguments.contains("-JARVIS_UI_TESTING") {
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-JARVIS_UI_TESTING") || arguments.contains("--jarvis-ui-test") {
             if visualStateArgument() == "object_model_missing" {
                 statusLabel.text = "Object model not installed. Text and code scanning are active."
             } else {
@@ -308,7 +309,8 @@ final class JarvisCameraViewController: UIViewController, AVCapturePhotoCaptureD
 
     private func visualStateArgument() -> String? {
         let arguments = ProcessInfo.processInfo.arguments
-        guard let index = arguments.firstIndex(of: "-JARVIS_VISUAL_STATE"),
+        let stateKey = arguments.firstIndex(of: "--jarvis-state") ?? arguments.firstIndex(of: "-JARVIS_VISUAL_STATE")
+        guard let index = stateKey,
               arguments.indices.contains(index + 1) else { return nil }
         return arguments[index + 1]
     }

@@ -93,7 +93,7 @@ final class JarvisXRTests: XCTestCase {
     func testAboutCommandReturnsBoundary() {
         let response = router.route(JarvisCommand("about"))
         XCTAssertEqual(response.status, .ok)
-        XCTAssertTrue(response.displayResponse.contains("not a jailbreak"))
+        XCTAssertTrue(response.displayResponse.contains("not system UI ownership"))
     }
 
     func testMemoryStorePersistsNoteInTestContext() {

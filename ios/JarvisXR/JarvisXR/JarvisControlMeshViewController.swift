@@ -52,7 +52,7 @@ final class JarvisControlMeshViewController: UIViewController {
 
         Boundaries:
         Boundary:
-        Hidden taps, lock screen control, SpringBoard hooks, background takeover, arbitrary floating UI, and root daemons require system-level access and are not claimed in this build.
+        Hidden taps, lock screen control, SpringBoard hooks, background system control, arbitrary floating UI, and root daemons require system-level access and are not claimed in this build.
         """
 
         let inspectButton = JarvisTheme.button(title: "Run Inspect Link")

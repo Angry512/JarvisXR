@@ -29,7 +29,7 @@ final class JarvisAboutViewController: UIViewController {
         Offline commands, local notes, command history, speech output, camera inspection, diagnostics, and device setup guidance.
 
         Boundaries:
-        This build does not claim jailbreak, root access, SpringBoard hooks, lock screen hooks, launchd daemon install, system-wide button remaps, arbitrary app control, or true OS takeover.
+        This build does not claim system UI ownership, lock screen control, background daemon install, system-wide button remaps, arbitrary app control, or true OS ownership.
 
         Practical identity:
         JARVIS is the foreground appliance shell. iOS remains the operating system.

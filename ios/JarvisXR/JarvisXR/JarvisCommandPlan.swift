@@ -10,7 +10,7 @@ enum JarvisCapabilityRoute: String {
     case shortcutRoute
     case voiceControlRoute
     case controlMeshGuide
-    case unsupportedRequiresJailbreak
+    case unsupportedRequiresSystemAccess
     case unsupportedModelMissing
     case unknown
 }

@@ -30,7 +30,8 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
     private var longPressSuppressesNextTap = false
     private var didApplyVisualProofState = false
     private var isUITestMode: Bool {
-        ProcessInfo.processInfo.arguments.contains("-JARVIS_UI_TESTING")
+        let arguments = ProcessInfo.processInfo.arguments
+        return arguments.contains("-JARVIS_UI_TESTING") || arguments.contains("--jarvis-ui-test")
     }
 
     override func viewDidLoad() {
@@ -576,7 +577,8 @@ final class JarvisRootViewController: UIViewController, UITextFieldDelegate {
         guard isUITestMode, !didApplyVisualProofState else { return }
         didApplyVisualProofState = true
         let arguments = ProcessInfo.processInfo.arguments
-        guard let index = arguments.firstIndex(of: "-JARVIS_VISUAL_STATE"),
+        let stateKey = arguments.firstIndex(of: "--jarvis-state") ?? arguments.firstIndex(of: "-JARVIS_VISUAL_STATE")
+        guard let index = stateKey,
               arguments.indices.contains(index + 1) else { return }
         switch arguments[index + 1] {
         case "ready":

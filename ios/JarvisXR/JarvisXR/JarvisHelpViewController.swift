@@ -82,9 +82,9 @@ final class JarvisHelpViewController: UIViewController {
             "Speaking means it is responding."
         ])
         addSection("Limits", [
-            "No hidden phone takeover without jailbreak.",
+            "No hidden phone ownership through public iOS app APIs.",
             "Phone-level actions use Control Mesh, Voice Control, or Shortcuts.",
-            "Background wake word and full phone takeover require system access not available in this build.",
+            "Background wake word and full phone ownership require system access not available in this build.",
             "JARVIS stays honest about anything iOS does not expose."
         ])
     }

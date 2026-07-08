@@ -249,7 +249,7 @@ final class JarvisCommandRouter {
             return .ok(plan.spokenText, display: controlMeshSummary(), data: ["action": "control_mesh", "route_label": plan.routeLabel])
         case .voiceControlRoute, .shortcutRoute, .appOpenURL:
             return .ok(plan.spokenText, display: plan.displayText, data: plan.data)
-        case .unsupportedRequiresJailbreak:
+        case .unsupportedRequiresSystemAccess:
             return JarvisResponse(status: .unavailable, spokenResponse: plan.spokenText, displayResponse: plan.displayText, data: plan.data)
         default:
             return nil
@@ -259,7 +259,7 @@ final class JarvisCommandRouter {
     private func status() -> JarvisResponse {
         let guided = UIAccessibility.isGuidedAccessEnabled ? "Guided Access active." : "Guided Access ready when enabled."
         let speech = JarvisSpeechService.shared.isEnabled ? "on" : "off"
-        return .ok("JARVIS is running locally.", display: "Mode: Control Mesh core.\nSpeech: \(speech)\n\(guided)\nGlobal layer: iOS Voice Control and Shortcuts when configured.\nNo jailbreak, root access, or system takeover is claimed.")
+        return .ok("JARVIS is running locally.", display: "Mode: Control Mesh core.\nSpeech: \(speech)\n\(guided)\nGlobal layer: iOS Voice Control and Shortcuts when configured.\nSystem-level ownership is not claimed in this build.")
     }
 
     private func installStatus() -> JarvisResponse {
@@ -268,7 +268,7 @@ final class JarvisCommandRouter {
         Windows install tool: AltServer.
         Lockdown layer after testing: Guided Access.
         Refresh note: free Apple ID installs usually need refresh after 7 days.
-        Boundary: no jailbreak, root access, SpringBoard hooks, or true OS takeover is claimed.
+        Boundary: system-level ownership is not claimed in this build.
         """
         return .ok("Install status ready.", display: display)
     }
@@ -295,7 +295,7 @@ final class JarvisCommandRouter {
         Vision: OCR and barcode scan after capture where supported. Object detection needs a Core ML model.
         Voice: local speech output and in-app push-to-talk.
         Sensors: motion availability, battery, storage, Low Power Mode.
-        Security: Guided Access and device restrictions are the non-jailbreak lockdown layer.
+        Security: Guided Access and device restrictions are the current lockdown layer.
         Connectivity: Wi-Fi is optional.
         """
         return .ok("Hardware summary ready.", display: display)
@@ -379,7 +379,7 @@ final class JarvisCommandRouter {
     }
 
     private func guidedAccess() -> JarvisResponse {
-        let display = "Open JARVIS, triple-click the side button, start Guided Access, and test exit first. Guided Access can keep JARVIS foreground. It cannot provide jailbreak, root access, SpringBoard hooks, lock screen hooks, or true OS ownership."
+        let display = "Open JARVIS, triple-click the side button, start Guided Access, and test exit first. Guided Access can keep JARVIS foreground. It cannot provide system UI ownership or lock screen control."
         return .ok("Guided Access instructions ready.", display: display)
     }
 
@@ -391,7 +391,7 @@ final class JarvisCommandRouter {
         Core: native Swift and UIKit, local commands, local memory, speech output, camera inspection, diagnostics.
         Control Mesh: Voice Control, Vocal Shortcuts, Shortcuts, URL scheme, and App Intents where available.
         Lockdown: Guided Access after testing.
-        Boundary: not a website, not a chatbot, not a jailbreak, and not true OS ownership.
+        Boundary: not a website, not a chatbot, and not system UI ownership.
         """
         return .ok("JARVIS appliance mode.", display: display)
     }
@@ -502,7 +502,7 @@ final class JarvisCommandRouter {
         Wake/action phrases: configure Vocal Shortcuts such as Jarvis inspect, Jarvis quiet, Jarvis normal, Jarvis diagnostics, and Jarvis standby.
         Automation bridge: create Shortcuts that open jarvis:// links.
         Return route: jarvis://standby or the JARVIS Return Shortcut.
-        Boundary: SpringBoard hooks, lock screen hooks, root daemons, hidden screen reading, and injected taps remain jailbreak-only.
+        Boundary: SpringBoard hooks, lock screen hooks, root daemons, hidden screen reading, and injected taps require system-level access.
         """
     }
 
@@ -520,7 +520,7 @@ final class JarvisCommandRouter {
             "show me how to tap that": ("Use Voice Control grid.", "Say: Show Grid, then Tap the target number.", [:]),
             "how do i tap that": ("Use Voice Control grid.", "Say: Show Grid, then Tap the target number.", [:]),
             "show grid": ("Show the Voice Control grid.", "Say: Show Grid.", [:]),
-            "go home": ("Use Voice Control.", "Say: Go Home. Direct system control requires jailbreak.", [:]),
+            "go home": ("Use Voice Control.", "Say: Go Home.", [:]),
             "go back to jarvis": ("Return to JARVIS.", "Use the JARVIS Return Shortcut, or say Open JARVIS.", [:]),
             "back to jarvis": ("Return to JARVIS.", "Use the JARVIS Return Shortcut, or say Open JARVIS.", [:]),
             "take screenshot": ("Use Voice Control.", "Say: Take Screenshot.", [:]),
@@ -594,7 +594,7 @@ final class JarvisCommandRouter {
         }
         let op = String(expression[opRange])
         if op == "/" && right == 0 {
-            return JarvisResponse(status: .refused, spokenResponse: "Division by zero refused.", displayResponse: "Cannot divide by zero.", shouldSpeak: false)
+            return JarvisResponse(status: .refused, spokenResponse: "Division by zero is not allowed.", displayResponse: "Cannot divide by zero.", shouldSpeak: false)
         }
         let result: Double
         switch op {

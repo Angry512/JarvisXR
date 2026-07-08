@@ -53,6 +53,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.amrik.jarvisxr.uitests
         INFOPLIST_FILE: JarvisXRUITests/Info.plist
+        TEST_TARGET_NAME: JarvisXR
 schemes:
   JarvisXR:
     build:

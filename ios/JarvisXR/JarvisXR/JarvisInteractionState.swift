@@ -2,7 +2,7 @@ import Foundation
 
 enum JarvisInteractionState: String {
     case standby = "Standby"
-    case ready = "JARVIS ready"
+    case ready = "Ready"
     case listening = "Listening"
     case heardYou = "Heard you"
     case processing = "Processing"

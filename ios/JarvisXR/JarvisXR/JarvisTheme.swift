@@ -237,7 +237,7 @@ final class JarvisOrbView: UIView {
         state = newState
         let label: String
         switch newState {
-        case .idle: label = "Standby"
+        case .idle: label = "Ready"
         case .listening: label = "Listening"
         case .processing: label = "Processing"
         case .speaking: label = "Speaking"

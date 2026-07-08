@@ -5,19 +5,19 @@ from pathlib import Path
 
 
 REQUIRED_SCREENSHOTS = [
-    "01-standby.png",
-    "02-ready-after-single-tap.png",
-    "03-listening-after-second-tap.png",
-    "04-processing-result-after-command.png",
-    "05-no-speech-ready.png",
-    "06-long-hold-standby.png",
-    "07-keyboard-open.png",
-    "08-help.png",
-    "09-control-mesh.png",
-    "10-inspection.png",
-    "11-object-model-missing.png",
-    "12-settings.png",
-    "13-diagnostics.png",
+    "standby.png",
+    "ready.png",
+    "listening.png",
+    "processing.png",
+    "no-speech.png",
+    "long-hold-standby.png",
+    "keyboard.png",
+    "help.png",
+    "mesh.png",
+    "inspection.png",
+    "object-model-missing.png",
+    "settings.png",
+    "diagnostics.png",
 ]
 
 

@@ -43,6 +43,8 @@ def main() -> int:
     project_yml = read(ROOT / "ios" / "JarvisXR" / "project.yml")
     workflow_yml = read(ROOT / ".github" / "workflows" / "ios-build.yml")
     ui_test = read(ROOT / "ios" / "JarvisXR" / "JarvisXRUITests" / "JarvisXRVisualProofTests.swift")
+    run_tests_bat = read(ROOT / "dist" / "jarvis_local_approval_bundle" / "run_tests.bat")
+    launch_screen = read(IOS_ROOT / "LaunchScreen.storyboard")
     orb_imageset = IOS_ROOT / "Assets.xcassets" / "JarvisOrb.imageset"
     app_icon_set = IOS_ROOT / "Assets.xcassets" / "AppIcon.appiconset"
 
@@ -90,6 +92,7 @@ def main() -> int:
     check("JarvisOrb imageset exists", orb_imageset.exists())
     check("JarvisOrb contents references real files", _imageset_has_real_files(orb_imageset))
     check("Root orb uses bundled asset with fallback", 'UIImage(named: "JarvisOrb")' in theme and "JarvisOrbView" in root + theme)
+    check("LaunchScreen storyboard source exists", 'launchScreen="YES"' in launch_screen and "JARVIS" in launch_screen)
     check("AppIcon assets exist", app_icon_set.exists() and _imageset_has_real_files(app_icon_set))
     check("Product source does not expose Blocked label", '"Blocked"' not in root + theme + state + preview_text)
     check("Product Swift does not keep blocked state case", "case blocked" not in root + state + planner)
@@ -97,6 +100,7 @@ def main() -> int:
     check("Long press returns standby", "enterStandbyFromLongPress" in root and "voiceInput.stopListening(process: false)" in root)
     check("Manual listening stop processes transcript", "voiceInput.stopListening(process: true)" in root and "onFinalTranscript" in voice)
     check("No speech returns ready", "case .noSpeech:" in root and "setInterfaceState(.ready, hint: \"No speech heard.\")" in root)
+    check("Ready state label matches UI proof", 'case ready = "Ready"' in state and 'waitForState("Ready")' in ui_test)
     check("Real UIKit layout uses keyboardLayoutGuide", "keyboardLayoutGuide.topAnchor" in root and "keyboardWillChangeFrameNotification" not in root)
     check("Real UIKit source avoids copied preview layout model", "JarvisXRLayoutModel" not in root + state)
     check("Launch screen configured", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "LaunchScreen.storyboard" in project_yml)
@@ -111,10 +115,49 @@ def main() -> int:
         "Set JARVIS Normal Mode",
     ]))
     check("UI test target configured", "JarvisXRUITests" in project_yml and "bundle.ui-testing" in project_yml)
-    check("UI screenshot test writes PNG files", "JARVIS_SCREENSHOT_DIR" in ui_test and "pngRepresentation.write" in ui_test)
-    check("Workflow captures required iOS screenshots", "Capture required iOS screenshots" in workflow_yml and "verify_visual_proof.py" in workflow_yml)
+    check("UI test target has TEST_TARGET_NAME", "TEST_TARGET_NAME: JarvisXR" in project_yml)
+    check("UI test launch args are handled by app and camera", "--jarvis-ui-test" in ui_test and "--jarvis-ui-test" in root and "--jarvis-ui-test" in camera)
+    check("UI screenshot test reads VISUAL_PROOF_DIR", "VISUAL_PROOF_DIR" in ui_test and "pngRepresentation.write" in ui_test)
+    check("UI screenshot test asserts file size", "attributesOfItem" in ui_test and "XCTAssertGreaterThan" in ui_test)
+    check("UI screenshot test cannot silently skip output", "else { return }" not in ui_test and "XCTSkip" not in ui_test)
+    check("UI screenshot test debugs failures", "failure-current-screen" in ui_test and "app.debugDescription" in ui_test)
+    check("UI screenshot test has exact required screenshot names", all(f'"{name}"' in ui_test for name in [
+        "standby",
+        "ready",
+        "listening",
+        "processing",
+        "no-speech",
+        "long-hold-standby",
+        "keyboard",
+        "help",
+        "mesh",
+        "inspection",
+        "object-model-missing",
+        "settings",
+        "diagnostics",
+    ]))
+    check("Workflow captures required iOS screenshots", "Capture required iOS screenshots" in workflow_yml and "VISUAL_PROOF_DIR" in workflow_yml and "verify_visual_proof.py" in workflow_yml)
     check("Workflow uploads screenshot artifact", "JarvisXR-ios-screenshot-proof" in workflow_yml and "if-no-files-found: error" in workflow_yml)
     check("Workflow fails if simulator is missing", "Screenshot proof cannot be generated" in workflow_yml and "exit 1" in workflow_yml)
+    check("Workflow uploads debug artifacts on failure", "if: always()" in workflow_yml and "JarvisXR-build-output" in workflow_yml and "visual-proof-filesystem-debug.log" in workflow_yml)
+    check("Workflow preserves xcresult bundles", ".xcresult" in workflow_yml and "xcodebuild-visual-proof.log" in workflow_yml)
+    check("Workflow prints selected destination", "Using xcodebuild destination" in workflow_yml and "--destination" in workflow_yml)
+    check("Workflow runs IPA audit against produced IPA", "tools/audit_ipa.py ios/JarvisXR/build/JarvisXR-unsigned.ipa" in workflow_yml)
+    check("Workflow saves required named logs", all(name in workflow_yml for name in [
+        "environment.txt",
+        "xcode-version.txt",
+        "simulator-list-before.txt",
+        "simulator-list-after-boot.txt",
+        "selected-simulator.txt",
+        "xcodegen.log",
+        "xcodebuild-build.log",
+        "xcodebuild-unit-test.log",
+        "xcodebuild-visual-proof.log",
+        "visual-proof-filesystem-debug.log",
+        "ipa-audit.log",
+        "artifact-tree.txt",
+    ]))
+    check("Local run_tests compiles helper scripts", "python -m py_compile" in run_tests_bat and "tools\\audit_ipa.py" in run_tests_bat and "tools\\verify_visual_proof.py" in run_tests_bat)
 
     if failures:
         print("JARVIS product surface test failed:")

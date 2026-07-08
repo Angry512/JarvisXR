@@ -120,6 +120,16 @@ def main() -> int:
         else:
             failures.append("Assets.car missing, asset catalog may not be bundled")
 
+        app_intents_metadata = [
+            name for name in names
+            if name.startswith(app_root + "/")
+            and (
+                "AppIntents" in name
+                or "AppShortcuts" in name
+                or "ExtractedAppShortcutsMetadata" in name
+            )
+        ]
+
         bundled_docs = [
             name for name in names
             if name.startswith(app_root + "/")
@@ -132,14 +142,18 @@ def main() -> int:
 
         combined = read_text_payload(archive, names, app_root)
         intents_seen = any(text in combined for text in REQUIRED_INTENT_STRINGS)
+        if app_intents_metadata:
+            passed.append("App Intents metadata resource present: " + ", ".join(app_intents_metadata[:4]))
         if intents_seen:
             for text in REQUIRED_INTENT_STRINGS:
                 if text in combined:
                     passed.append(f"Intent string present: {text}")
                 else:
                     failures.append(f"Expected App Intent string missing from readable bundle payload: {text}")
+        elif app_intents_metadata:
+            warnings.append("App Intent strings were not readable, but App Intents metadata resources were found")
         else:
-            warnings.append("App Intent strings were not visible in readable payload, metadata may be compiler-packed")
+            failures.append("App Intents metadata or readable intent strings were not found in the app bundle")
 
         if ".mlmodelc/" not in "\n".join(names):
             if "Object model not installed" in combined:

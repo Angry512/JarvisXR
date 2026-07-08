@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 import subprocess
 import sys
 
@@ -16,6 +17,11 @@ PREFERRED_NAMES = [
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Select an iPhone Simulator for JARVIS CI.")
+    parser.add_argument("--destination", action="store_true", help="Print xcodebuild destination string instead of raw UDID.")
+    parser.add_argument("--details", action="store_true", help="Print JSON details for the selected simulator.")
+    args = parser.parse_args()
+
     try:
         raw = subprocess.check_output(
             ["xcrun", "simctl", "list", "devices", "available", "-j"],
@@ -26,21 +32,32 @@ def main() -> int:
     except Exception:
         return 1
 
-    devices = [
-        device
-        for runtime_devices in data.get("devices", {}).values()
-        for device in runtime_devices
-        if device.get("isAvailable") and "iPhone" in device.get("name", "")
-    ]
+    devices = []
+    for runtime, runtime_devices in data.get("devices", {}).items():
+        for device in runtime_devices:
+            if device.get("isAvailable") and "iPhone" in device.get("name", ""):
+                devices.append({**device, "runtime": runtime})
     for preferred in PREFERRED_NAMES:
         for device in devices:
             if device.get("name") == preferred:
-                print(device.get("udid", ""))
+                print(format_output(device, args.destination, args.details))
                 return 0
     if devices:
-        print(devices[0].get("udid", ""))
+        print(format_output(devices[0], args.destination, args.details))
         return 0
     return 1
+
+
+def format_output(device: dict, destination: bool, details: bool) -> str:
+    udid = device.get("udid", "")
+    if details:
+        return json.dumps({
+            "name": device.get("name", ""),
+            "udid": udid,
+            "runtime": device.get("runtime", ""),
+            "state": device.get("state", ""),
+        }, sort_keys=True)
+    return f"id={udid}" if destination else udid
 
 
 if __name__ == "__main__":

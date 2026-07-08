@@ -93,7 +93,7 @@ final class JarvisDiagnosticsViewController: UIViewController {
         Install mode: sideloaded unsigned IPA path
 
         Boundary:
-        No jailbreak, root access, SpringBoard hooks, lock screen hooks, launchd daemon install, arbitrary app control, or true OS ownership is claimed.
+        No system UI ownership, lock screen control, background daemon install, arbitrary app control, or true OS ownership is claimed.
         """
     }
 }

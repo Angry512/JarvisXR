@@ -62,7 +62,7 @@ final class JarvisSettingsViewController: UIViewController {
         Notes and command history are stored locally on this device. Do not store sensitive secrets by default.
 
         Guided Access can keep JARVIS foreground.
-        It cannot provide jailbreak, root access, SpringBoard hooks, lock screen hooks, launchd daemon install, arbitrary app control, or true OS ownership.
+        It cannot provide system UI ownership, lock screen control, background daemon install, arbitrary app control, or hidden screen control.
         """
 
         let clearNotesButton = JarvisTheme.button(title: "Clear Notes")
