@@ -86,7 +86,6 @@ final class JarvisXRVisualProofTests: XCTestCase {
     }
 
     private func launch(state: String? = nil) {
-        app?.terminate()
         app = XCUIApplication()
         app.launchArguments = ["--jarvis-ui-test"]
         if let state {

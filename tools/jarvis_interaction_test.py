@@ -150,7 +150,7 @@ def main() -> int:
     check("Swift root does not call standby from normal listening stop", "case .listening, .heardYou:\n            voiceInput.stopListening(process: true)" in swift_root and "case .processing:\n            showTransient(\"Processing.\")" in swift_root)
     check("Voice service supports process and cancel stop modes", "func stopListening(process: Bool = true)" in swift_voice and "finishRecognition(process: process)" in swift_voice)
     check("Voice no speech does not force standby", "self.onStateChange?(.noSpeech)\n                self.onStateChange?(.standby)" not in swift_voice)
-    check("LaunchScreen configured in Info.plist/project.yml", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "LaunchScreen.storyboard" in project_yml)
+    check("LaunchScreen configured in Info.plist/project.yml", "UILaunchStoryboardName" in info_plist and "LaunchScreen" in info_plist and "path: JarvisXR" in project_yml and "LaunchScreen.storyboard" not in project_yml)
     check("README markdown excluded from app resources", "Models/README.md" in project_yml)
     check("XR layout constants not in real UIKit source", "JarvisXRLayoutModel" not in swift_root + swift_state and "designHeight: CGFloat = 896" not in swift_state)
     check("No fake object model claims", "VNClassifyImageRequest" in (IOS_ROOT / "JarvisCameraViewController.swift").read_text(encoding="utf-8") and "visual_classification" in swift_router and "Object model not installed" not in swift_router + swift_vision)

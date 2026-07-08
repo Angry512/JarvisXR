@@ -113,6 +113,7 @@ jobs:
 
       - name: Audit unsigned IPA
         run: |
+          set -o pipefail
           mkdir -p ios/JarvisXR/build/logs
           python3 tools/audit_ipa.py ios/JarvisXR/build/JarvisXR-unsigned.ipa | tee ios/JarvisXR/build/logs/ipa-audit.log
 
@@ -147,7 +148,6 @@ jobs:
             -resultBundlePath build/logs/JarvisXRVisualProof.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            -only-testing:JarvisXRUITests/JarvisXRVisualProofTests/testAppLaunchesAndShowsOrb \
             -only-testing:JarvisXRUITests/JarvisXRVisualProofTests/testCaptureRequiredVisualProofScreens \
             test | tee -a build/logs/xcodebuild-visual-proof.log
           python3 ../../tools/verify_visual_proof.py "$VISUAL_PROOF_DIR" | tee -a build/logs/xcodebuild-visual-proof.log
