@@ -108,36 +108,33 @@ final class JarvisXRVisualProofTests: XCTestCase {
     private func waitForState(_ state: String) {
         let label = app.staticTexts["jarvis.state"]
         waitFor(label, named: "state label")
-        let predicate = NSPredicate(format: "label == %@", state)
-        expectation(for: predicate, evaluatedWith: label)
-        waitForExpectations(timeout: 5)
+        waitUntil("state \(state)") {
+            label.label == state
+        }
     }
 
     private func waitForAnyState(_ states: [String]) {
         let label = app.staticTexts["jarvis.state"]
         waitFor(label, named: "state label")
-        let predicate = NSPredicate { element, _ in
-            guard let element = element as? XCUIElement else { return false }
-            return states.contains(element.label)
+        waitUntil("one of states \(states.joined(separator: ", "))") {
+            states.contains(label.label)
         }
-        expectation(for: predicate, evaluatedWith: label)
-        waitForExpectations(timeout: 5)
     }
 
     private func waitForHintContaining(_ text: String) {
         let hint = app.staticTexts["jarvis.hint"]
         waitFor(hint, named: "hint label")
-        let predicate = NSPredicate(format: "label CONTAINS %@", text)
-        expectation(for: predicate, evaluatedWith: hint)
-        waitForExpectations(timeout: 5)
+        waitUntil("hint containing \(text)") {
+            hint.label.contains(text)
+        }
     }
 
     private func waitForInspectionStatusContaining(_ text: String) {
         let status = app.staticTexts["jarvis.inspection.status"]
         waitFor(status, named: "inspection status")
-        let predicate = NSPredicate(format: "label CONTAINS %@", text)
-        expectation(for: predicate, evaluatedWith: status)
-        waitForExpectations(timeout: 5)
+        waitUntil("inspection status containing \(text)") {
+            status.label.contains(text)
+        }
     }
 
     private func waitFor(_ element: XCUIElement, named name: String, timeout: TimeInterval = 5) {
@@ -146,6 +143,15 @@ final class JarvisXRVisualProofTests: XCTestCase {
             print(app.debugDescription)
             XCTFail("Missing \(name). Current UI:\n\(app.debugDescription)")
         }
+    }
+
+    private func waitUntil(_ name: String, timeout: TimeInterval = 8, condition: () -> Bool) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() { return }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+        }
+        XCTFail("Timed out waiting for \(name). Current UI:\n\(app.debugDescription)")
     }
 
     private func saveScreenshot(_ name: String) {
